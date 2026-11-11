@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1433">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ma Bulle">
+<title>Ma Bulle</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg1:#1a1433; --bg2:#22305a; --card:rgba(255,255,255,.07); --card2:rgba(255,255,255,.12);
+  --line:rgba(255,255,255,.14); --txt:#f3f0ff; --mute:#b9b3d6; --acc:#7fe0d0; --acc2:#b79bff; --warm:#ffb38a; --sos:#ff6b8b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg1);color:var(--txt);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{background:radial-gradient(1200px 700px at 80% -10%,#3a2c74 0,transparent 60%),radial-gradient(900px 600px at -10% 110%,#16455a 0,transparent 60%),linear-gradient(180deg,var(--bg1),var(--bg2));background-attachment:fixed}
+main{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 16px 110px}
+h1{font-size:26px;margin:6px 0 2px;letter-spacing:.2px} h2{font-size:20px;margin:18px 0 8px} h3{font-size:17px;margin:0 0 6px}
+p{margin:8px 0} .mute{color:var(--mute)} .small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;backdrop-filter:blur(6px)}
+.row{display:flex;gap:10px;align-items:center} .grow{flex:1}
+.btn{appearance:none;border:0;border-radius:14px;padding:13px 16px;font:600 16px system-ui,sans-serif;color:#141029;background:var(--acc);cursor:pointer;width:100%;margin-top:10px}
+.btn.alt{background:var(--card2);color:var(--txt);border:1px solid var(--line)} .btn.soft{background:var(--acc2)} .btn.warm{background:var(--warm)} .btn.sos{background:var(--sos);color:#fff}
+.btn:active{transform:scale(.98)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:999px;padding:8px 12px;font-size:14px;cursor:pointer}
+.chip.on{background:var(--acc);color:#141029;border-color:transparent;font-weight:600}
+textarea,input[type=text],input[type=tel],input[type=password],input[type=time]{width:100%;background:rgba(0,0,0,.22);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:15px system-ui,sans-serif;margin-top:6px}
+textarea{min-height:84px;resize:vertical} label{display:block;margin-top:12px;font-size:14px;color:var(--mute)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+body.miku{--bg1:#0d1416;--bg2:#141d22;--card:rgba(57,197,187,.08);--card2:rgba(57,197,187,.16);--line:rgba(57,197,187,.28);--txt:#eefcfb;--mute:#9fc9c5;--acc:#39c5bb;--acc2:#e12885;--warm:#86e3dc;
+  background:radial-gradient(900px 600px at 85% -10%,rgba(57,197,187,.28) 0,transparent 60%),radial-gradient(700px 500px at -10% 110%,rgba(225,40,133,.18) 0,transparent 60%),linear-gradient(180deg,var(--bg1),var(--bg2));background-attachment:fixed}
+body.miku .btn.soft{color:#fff} body.miku .bubble{background:radial-gradient(circle at 35% 30%,#ffffffcc,#39c5bb 40%,#137a72 100%);box-shadow:0 0 60px rgba(57,197,187,.6)}
+body.miku nav.bar{background:rgba(10,16,18,.94)} body.miku .chip.on{background:var(--acc)}
+body.miku h1::after{content:" ♪";color:var(--acc2)}
+body.miku .card{border-image:none}
+body.miku .sos-wrap{background:linear-gradient(180deg,#10262a,#0d1416)} body.miku .lock{background:#0d1416}
+.notes{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;display:none} body.miku .notes{display:block}
+.notes span{position:absolute;bottom:-40px;color:rgba(57,197,187,.25);font-size:22px;animation:up 14s linear infinite}
+@keyframes up{to{transform:translateY(-110vh) rotate(25deg);opacity:0}}
+main{position:relative;z-index:1}
+.mascot{display:flex;align-items:flex-end;gap:6px;margin:4px 0 2px}
+.mascot img{width:118px;height:auto;flex:none;filter:drop-shadow(0 6px 14px rgba(57,197,187,.35));animation:bob 3.2s ease-in-out infinite}
+.mascot .say{position:relative;background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:34px;font-size:15px}
+.mascot .say::before{content:"";position:absolute;left:-9px;bottom:16px;border:9px solid transparent;border-right-color:var(--line);border-left:0}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.lvlup{position:fixed;inset:0;z-index:35;display:grid;place-items:center;background:rgba(5,10,12,.82);padding:20px;text-align:center}
+.lvlup img{width:220px;animation:jump .9s ease-in-out infinite}
+@keyframes jump{50%{transform:translateY(-16px) rotate(-3deg)}}
+nav.bar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:rgba(20,15,40,.92);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom));backdrop-filter:blur(10px);z-index:5}
+nav.bar button{flex:1;max-width:140px;background:none;border:0;color:var(--mute);font:600 12px system-ui,sans-serif;padding:6px 0;cursor:pointer}
+nav.bar button .i{display:block;font-size:22px;line-height:1.2} nav.bar button.on{color:var(--acc)}
+.sosfab{position:fixed;right:14px;top:calc(env(safe-area-inset-top) + 12px);z-index:6;background:var(--sos);color:#fff;border:0;border-radius:999px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 6px 20px rgba(255,107,139,.4);cursor:pointer}
+.mods .mod{margin:14px 0}
+.step{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin:8px 0;cursor:pointer}
+.step .n{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--card2);font-weight:700;font-size:14px;flex:none}
+.step.done .n{background:var(--acc);color:#141029} .step.lock{opacity:.45;cursor:default}
+.bar2{height:8px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden} .bar2 i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.meteo{display:flex;justify-content:space-between;gap:6px;margin-top:8px} .meteo button{flex:1;font-size:28px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 0;cursor:pointer}
+.meteo button.on{background:var(--acc2);border-color:transparent}
+.breath{display:grid;place-items:center;height:280px;position:relative}
+.bubble{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffffcc,var(--acc) 40%,#3aa89a 100%);box-shadow:0 0 60px rgba(127,224,208,.5);transition:transform linear}
+.bword{position:absolute;bottom:0;font-size:20px;font-weight:700}
+.big{font-size:44px;font-weight:800;text-align:center;margin:8px 0}
+.sos-wrap{position:fixed;inset:0;background:linear-gradient(180deg,#2a1838,#1a1433);z-index:20;overflow:auto;padding:calc(env(safe-area-inset-top) + 16px) 16px 30px}
+.sos-wrap .inner{max-width:560px;margin:0 auto}
+.tel{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--txt);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
+.tel b{font-size:16px} .tel span{font-size:13px;color:var(--mute)}
+.lock{position:fixed;inset:0;background:var(--bg1);z-index:30;display:grid;place-items:center;padding:20px}
+.pin{display:flex;gap:10px;justify-content:center;margin:14px 0} .pin i{width:16px;height:16px;border-radius:50%;border:2px solid var(--acc)} .pin i.f{background:var(--acc)}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center} .pad button{height:64px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--txt);font:600 24px system-ui;cursor:pointer}
+.entry{border-left:3px solid var(--acc2);padding:4px 0 4px 12px;margin:12px 0}
+canvas{width:100%;height:150px}
+.hidden{display:none!important}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0} .quick .btn{margin:0}
+details.card summary{cursor:pointer;list-style:none} details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:" ›";color:var(--mute)} details.card[open] summary{margin-bottom:6px}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--card2);color:var(--mute)}
+</style>
+</head>
+<body>
+<button class="sosfab" id="sosfab" onclick="openSOS()">🆘 SOS</button>
+<div class="notes"><span style="left:8%;animation-delay:0s">♪</span><span style="left:26%;animation-delay:4s">♫</span><span style="left:48%;animation-delay:8s">♪</span><span style="left:70%;animation-delay:2s">♬</span><span style="left:88%;animation-delay:10s">♫</span></div>
+<main id="app"></main>
+<nav class="bar" id="nav">
+  <button data-v="home"><span class="i">🫧</span>Accueil</button>
+  <button data-v="path"><span class="i">🧭</span>Parcours</button>
+  <button data-v="journal"><span class="i">📔</span>Journal</button>
+  <button data-v="progress"><span class="i">🌱</span>Progrès</button>
+  <button data-v="settings"><span class="i">⚙️</span>Moi</button>
+</nav>
+<div id="sos" class="sos-wrap hidden"></div>
+<div id="lock" class="lock hidden"></div>
+
+<script>
+/* Ma Bulle — trousse émotionnelle et parcours pour apprendre à gérer ses émotions.
+   Tout reste sur le téléphone (localStorage), rien n'est envoyé nulle part. Ne remplace pas un suivi par un psy. */
+const K = "maBulle.v1";
+const S = Object.assign({ theme: "miku", name: "", trustName: "", trustTel: "", pin: "", done: {}, ans: {}, mood: {}, journal: [], box: [], plan: {}, wins: {}, day: {}, defi: {}, music: "", seance: "" }, (() => { try { return JSON.parse(localStorage.getItem(K)) || {}; } catch (e) { return {}; } })());
+const save = () => { try { localStorage.setItem(K, JSON.stringify(S)); } catch (e) {} };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// date du jour en heure locale (toISOString donnait la date UTC : entre minuit et 1-2 h, c'était encore « hier »)
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const today = () => ymd(new Date());
+const fmtD = d => new Date(d + "T12:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+// voix qui guide les exercices : synthèse vocale du téléphone, rien n'est envoyé sur Internet
+const VOICE = { ok: "speechSynthesis" in window, v: null };
+function pickVoice() { if (!VOICE.ok) return; const vs = speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang));
+  VOICE.v = vs.find(v => /fr-FR/i.test(v.lang) && /female|femme|amelie|amélie|audrey|marie|julie|denise|hortense|eloise|google/i.test(v.name)) || vs.find(v => /fr-FR/i.test(v.lang)) || vs[0] || null; }
+if (VOICE.ok) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {} }
+function say(t) {
+  if (!VOICE.ok || S.voice === false || !t) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/…/g, ".")); u.lang = "fr-FR"; if (VOICE.v) u.voice = VOICE.v; u.rate = .85; u.pitch = 1.05; speechSynthesis.speak(u); } catch (e) {}
+}
+const hush = () => { try { VOICE.ok && speechSynthesis.cancel(); } catch (e) {} };
+function voiceChip() { return VOICE.ok ? `<button class="chip ${S.voice !== false ? "on" : ""}" onclick="toggleVoice(this)">${S.voice !== false ? "🔊 Voix activée" : "🔇 Voix coupée"}</button>` : ""; }
+function toggleVoice(b) { S.voice = S.voice === false; save(); if (S.voice === false) hush(); else say("Je suis là. Je te guide.");
+  if (b) { b.classList.toggle("on", S.voice !== false); b.textContent = S.voice !== false ? "🔊 Voix activée" : "🔇 Voix coupée"; } }
+
+// ---------------------------------------------------------------- le parcours
+const MODS = [
+  { t: "Comprendre mes émotions", ic: "🌊" }, { t: "Calmer mon corps", ic: "🌬️" }, { t: "Traverser une crise", ic: "⛵" },
+  { t: "Apprivoiser mes pensées", ic: "🧠" }, { t: "Prendre soin de moi", ic: "💜" },
+];
+const EMOS = ["Triste", "En colère", "Angoissée", "Stressée", "Seule", "Vide", "Honteuse", "Jalouse", "Frustrée", "Déçue", "Perdue", "Épuisée", "Blessée", "Rejetée", "Nerveuse", "Agacée", "Calme", "Contente", "Fière", "Soulagée", "Joyeuse", "Reconnaissante", "Apaisée", "Motivée"];
+const STEPS = [
+  { m: 0, t: "Les émotions, c'est comme des vagues", why: "Une émotion monte, atteint un pic, puis redescend. Si on ne la nourrit pas, la vague passe souvent en quelques minutes. Savoir ça, c'est déjà moins avoir peur de ses émotions.",
+    ex: { k: "read", txt: "Repense à une fois où une émotion forte est montée puis est retombée. Tu n'as rien à faire de parfait ici, juste observer.", q: ["Qu'est-ce qui a déclenché la vague ?", "Comment elle est montée dans ton corps ?", "Qu'est-ce qui l'a fait redescendre, même un peu ?"] } },
+  { m: 0, t: "Mon thermomètre", why: "Mettre un chiffre de 0 à 10 sur ce qu'on ressent aide à voir la crise arriver avant qu'elle soit trop haute. Plus on la repère tôt, plus c'est facile de la calmer.",
+    ex: { k: "read", txt: "Décris à quoi ressemble chaque niveau pour toi. Ce sera ton thermomètre personnel.", q: ["À 2-3 sur 10, je suis…", "À 5-6 sur 10, je remarque…", "À 8-9 sur 10, je ressens…"] } },
+  { m: 0, t: "Nommer, c'est apaiser", why: "Mettre un mot précis sur une émotion calme le cerveau : la partie qui réfléchit reprend un peu la main sur celle qui s'emballe.",
+    ex: { k: "chips", txt: "Choisis les mots qui décrivent ce que tu ressens le plus souvent en ce moment.", opts: EMOS, key: "emos" } },
+  { m: 0, t: "Mes signaux d'alerte", why: "Le corps prévient souvent avant que l'émotion déborde. Connaître tes signaux, c'est pouvoir agir plus tôt.",
+    ex: { k: "chips", txt: "Quels signaux ton corps t'envoie quand ça commence à monter ?", opts: ["Cœur qui bat vite", "Gorge serrée", "Boule au ventre", "Chaleur au visage", "Mâchoire serrée", "Larmes", "Souffle court", "Mains qui tremblent", "Envie de fuir", "Tête qui tourne", "Je me ferme", "J'ai envie de crier"], key: "signals", q: ["Les situations qui déclenchent souvent ça chez moi :"] } },
+  { m: 1, t: "La cohérence cardiaque", why: "Respirer 6 fois par minute (5 secondes pour inspirer, 5 pour expirer) calme le cœur et le stress en quelques minutes. Utilisé en sophrologie : 3 fois par jour, ça installe un calme de fond.",
+    ex: { k: "breath", pat: [5, 0, 5, 0], min: 3 } },
+  { m: 1, t: "La respiration carrée", why: "Inspirer, bloquer, expirer, bloquer : 4 temps égaux. Compter occupe l'esprit et le souffle ralentit tout seul. Pratique en cours ou dans le bus, personne ne le voit.",
+    ex: { k: "breath", pat: [4, 4, 4, 4], min: 2 } },
+  { m: 1, t: "Serrer pour relâcher", why: "On contracte un muscle quelques secondes puis on relâche : le corps découvre la différence entre tendu et détendu. Très efficace avant de dormir.",
+    ex: { k: "guide", steps: [["Installe-toi assise ou allongée. Ferme les yeux si tu veux.", 8], ["Serre fort les poings… tiens…", 6], ["Relâche. Sens la chaleur dans tes mains.", 10], ["Remonte les épaules vers les oreilles… serre…", 6], ["Relâche. Laisse-les tomber.", 10], ["Plisse fort le visage, yeux et bouche…", 6], ["Relâche tout le visage. La mâchoire se desserre.", 10], ["Contracte le ventre…", 6], ["Relâche. Laisse ta respiration revenir.", 10], ["Pousse les pieds dans le sol, serre les jambes…", 6], ["Relâche. Tout ton corps est plus lourd, plus calme.", 12]] } },
+  { m: 1, t: "Le scan du corps", why: "Exercice de sophrologie : on promène son attention dans le corps, sans rien changer. Ça ramène dans le présent et ça apaise les pensées qui tournent.",
+    ex: { k: "guide", steps: [["Installe-toi confortablement. Respire tranquillement.", 10], ["Porte ton attention sur tes pieds. Sens leur poids, leur température.", 12], ["Remonte vers tes jambes. Laisse-les se détendre.", 12], ["Ton ventre se soulève et redescend avec ta respiration.", 12], ["Tes épaules. Laisse-les descendre un peu.", 12], ["Ton visage : le front se lisse, la mâchoire se relâche.", 12], ["Sens ton corps tout entier, posé, en sécurité.", 15], ["Quand tu es prête, bouge doucement les doigts et ouvre les yeux.", 8]] } },
+  { m: 1, t: "Mon endroit calme", why: "Le cerveau réagit à ce qu'on imagine presque comme à ce qu'on vit. Un endroit calme bien imaginé devient un refuge où tu peux aller en 30 secondes.",
+    ex: { k: "read", txt: "Ferme les yeux et imagine un endroit où tu te sens bien et en sécurité, réel ou inventé. Puis décris-le avec tes 5 sens.", q: ["C'est où ?", "Ce que je vois et ce que j'entends :", "Ce que je sens (odeurs, température, sur la peau) :"] } },
+  { m: 2, t: "La règle des 10 minutes", why: "Une envie très forte (crier, partir, se faire du mal) est au plus haut au début puis baisse. Attendre 10 minutes en faisant autre chose laisse passer le pic.",
+    ex: { k: "timer", sec: 600, txt: "Lance le minuteur et fais autre chose en attendant : respire, bouge, écoute une musique, parle à quelqu'un. À la fin, regarde où tu en es sur 10." } },
+  { m: 2, t: "Le froid qui calme", why: "Le froid sur le visage (eau très froide, glaçon dans la main) ralentit le cœur en quelques secondes : c'est un réflexe du corps. Un des moyens les plus rapides de faire redescendre une crise.",
+    ex: { k: "timer", sec: 30, txt: "Passe de l'eau très froide sur ton visage, ou tiens un glaçon dans ta main, pendant 30 secondes. Respire lentement en même temps." } },
+  { m: 2, t: "Bouger fort, 1 minute", why: "Une émotion très forte remplit le corps d'énergie. La dépenser vite (sauter, courir sur place, faire des pompes) la fait retomber.",
+    ex: { k: "timer", sec: 60, txt: "Saute sur place, cours sur place ou fais des montées de genoux à fond pendant 1 minute. Puis respire lentement." } },
+  { m: 2, t: "5-4-3-2-1 : revenir ici", why: "Quand l'angoisse emporte tout, nommer ce qui est autour de soi ramène l'esprit dans le présent, là où tu es en sécurité.",
+    ex: { k: "ground" } },
+  { m: 2, t: "Ma boîte de secours", why: "En pleine crise, on n'arrive pas à réfléchir. Choisis maintenant, au calme, ce qui t'aide : ta liste sera dans le bouton SOS.",
+    ex: { k: "chips", txt: "Ce qui peut m'aider quand ça monte (choisis-en plusieurs, ajoute les tiennes) :", opts: ["Écouter ma playlist", "Prendre une douche", "Tenir un glaçon", "Serrer une balle", "Dessiner / gribouiller", "Sortir marcher", "Appeler quelqu'un", "Câliner mon animal", "Regarder une série", "Écrire ce que je ressens", "Danser", "Me rouler dans une couverture", "Chanter fort", "Jouer à un jeu", "Travailler sur mon cosplay", "Dessiner un personnage", "Regarder mon anime préféré", "Écouter un opening que j'adore", "Feuilleter mes photos de cosplay"], key: "box", custom: true } },
+  { m: 3, t: "Les pièges à pensées", why: "Quand on va mal, le cerveau tombe dans des pièges : tout voir en noir, deviner ce que pensent les autres, imaginer le pire. Les reconnaître leur enlève beaucoup de force.",
+    ex: { k: "chips", txt: "Lesquels tu reconnais chez toi ?", opts: ["Tout ou rien (« c'est nul, je rate tout »)", "Lire dans les pensées (« elle me trouve bizarre »)", "La catastrophe (« ça va être horrible »)", "L'étiquette (« je suis nulle »)", "Toujours / jamais (« ça m'arrive toujours »)", "Tout est de ma faute", "Je le sens donc c'est vrai", "Ne voir que le négatif"], key: "traps" } },
+  { m: 3, t: "Démêler une pensée", why: "Écrire une pensée qui fait mal et la regarder comme une hypothèse, pas comme une vérité, fait souvent baisser l'émotion.",
+    ex: { k: "thought" } },
+  { m: 3, t: "La voix de la meilleure amie", why: "On est souvent bien plus dure avec soi qu'avec les autres. Se parler comme à une amie qu'on aime change tout.",
+    ex: { k: "read", txt: "Pense à quelque chose qui te fait te sentir nulle ou coupable en ce moment.", q: ["Ce que je me dis dans ma tête :", "Ce que je dirais à ma meilleure amie si elle vivait la même chose :", "Une phrase gentille que je peux me redire :"] } },
+  { m: 4, t: "Une lettre pour moi", why: "S'écrire avec douceur, comme on écrirait à quelqu'un qu'on aime, aide à se sentir moins seule face à ce qu'on vit.",
+    ex: { k: "read", txt: "Écris-toi quelques lignes, avec bienveillance. Tu peux commencer par « Je sais que c'est dur en ce moment… ».", q: ["Ma lettre :"] } },
+  { m: 4, t: "Mes 3 victoires du jour", why: "Le cerveau retient d'abord le négatif. Noter chaque soir 3 petites choses réussies ou agréables l'entraîne à voir aussi le reste. À refaire souvent !",
+    ex: { k: "wins" } },
+  { m: 4, t: "Mon plan de secours", why: "Un plan écrit à l'avance, au calme, pour savoir quoi faire si ça va très mal. Le mieux est de le remplir ou de le relire avec ton psy.",
+    ex: { k: "plan" } },
+];
+
+// ---------------------------------------------------------------- navigation
+let view = "home", cur = null, timers = [];
+const stopTimers = () => { timers.forEach(clearInterval); timers.forEach(clearTimeout); timers = []; hush(); };
+function go(v, arg) { stopTimers(); view = v; cur = arg; render(); window.scrollTo(0, 0); }
+document.querySelectorAll("nav.bar button").forEach(b => b.onclick = () => go(b.dataset.v));
+const doneCount = () => Object.keys(S.done).length;
+const nextStep = () => STEPS.findIndex((_, i) => !S.done[i]);
+
+function render() {
+  document.body.classList.toggle("miku", S.theme === "miku");
+  document.documentElement.style.background = S.theme === "miku" ? "#0d1416" : "#1a1433";
+  document.querySelector('meta[name="theme-color"]').content = S.theme === "miku" ? "#0d1416" : "#1a1433";
+  document.querySelectorAll("nav.bar button").forEach(b => b.classList.toggle("on", b.dataset.v === view || (view === "step" && b.dataset.v === "path")));
+  const A = $("#app");
+  if (view === "home") A.innerHTML = home();
+  else if (view === "path") A.innerHTML = path();
+  else if (view === "step") { A.innerHTML = stepView(cur); mountEx(cur); }
+  else if (view === "journal") A.innerHTML = journal();
+  else if (view === "progress") { A.innerHTML = progress(); drawChart(); }
+  else if (view === "settings") A.innerHTML = settings();
+  else if (view === "tools") A.innerHTML = tools();
+  else if (view === "tool") { A.innerHTML = toolView(cur); mountTool(cur); }
+  else if (view === "seance") { A.innerHTML = seance(); drawChart(); }
+  else if (view === "now") { A.innerHTML = nowView(); mountNow(); }
+  else if (view === "urge") { A.innerHTML = urgeView(); drawUrge(); }
+  else if (view === "stress") { A.innerHTML = `<h1>Stress express ⚡</h1><p class="mute">Le soupir qui détend : <b>2 inspirations</b> par le nez (une grande, puis une petite pour remplir à fond), puis <b>une longue expiration</b> par la bouche. 1 minute suffit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""]); }
+  else if (view === "breathe") { A.innerHTML = `<h1>Respirer</h1><p class="mute">Suis la bulle. Inspire quand elle grossit, expire quand elle rétrécit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [5, 0, 5, 0], 3); }
+  checkLevel();
+}
+
+// ---------------------------------------------------------------- accueil
+const MOODS = ["⛈️", "🌧️", "☁️", "⛅", "☀️"];
+function home() {
+  const m = S.mood[today()], n = nextStep(), hi = new Date().getHours();
+  const hello = hi < 6 ? "Bonne nuit" : hi < 18 ? "Coucou" : "Bonsoir";
+  const L = lvlInfo();
+  return `<h1>${hello}${S.name ? " " + esc(S.name) : ""} 🫧</h1><p class="mute">Ta bulle, rien qu'à toi · <span class="badge" onclick="go('progress')" style="cursor:pointer">⚔️ Niv. ${L.i + 1} · ${L.name}</span></p>${mascot(m)}
+  ${newsCard()}
+  <div class="card"><h3>Ma météo intérieure aujourd'hui</h3>
+    <div class="meteo">${MOODS.map((e, i) => `<button class="${m && m.v === i ? "on" : ""}" onclick="setMood(${i})">${e}</button>`).join("")}</div>
+    ${m ? `<p class="small mute">${m.v <= 1 ? "Merci de l'avoir dit. Tu veux respirer un peu, ou écrire dans ton journal ?" : m.v === 2 ? "Une journée moyenne, c'est normal aussi." : "Contente pour toi 😊 Note ce qui t'a fait du bien dans tes victoires."}</p>` : `<p class="small mute">Touche le temps qui ressemble à ce que tu ressens.</p>`}
+    ${m && m.v <= 1 ? `<button class="btn soft" onclick="go('breathe')">🌬️ Respirer 3 minutes</button>` : ""}
+  </div>
+  <button class="btn warm" style="font-size:18px;padding:16px" onclick="go('now')">💭 Ce que je ressens maintenant</button>
+  ${n >= 0 ? `<div class="card"><span class="badge">${MODS[STEPS[n].m].ic} ${MODS[STEPS[n].m].t}</span><h3 style="margin-top:8px">Ta prochaine étape : ${esc(STEPS[n].t)}</h3><p class="small mute">${esc(STEPS[n].why)}</p><button class="btn" onclick="go('step',${n})">Commencer (5 min)</button></div>`
+    : `<div class="card"><h3>🎉 Tu as fini tout le parcours !</h3><p class="mute small">Tu peux refaire les étapes qui t'ont aidée autant que tu veux.</p></div>`}
+  <div class="quick"><button class="btn alt" onclick="go('stress')">⚡ Stress express</button><button class="btn alt" onclick="go('breathe')">🌬️ Respirer</button>
+    <button class="btn alt" onclick="go('journal','new')">✍️ Écrire</button><button class="btn alt" onclick="go('tools')">🧰 Mes outils</button></div>
+  ${defiCard()}
+  ${dayCard()}`;
+}
+// message « nouveautés », affiché une fois, pour donner envie de réessayer
+function newsCard() {
+  if ((S.news || 0) >= 2) return "";
+  return `<div class="card" style="border-color:var(--acc)"><h3>✨ Ma Bulle s'est améliorée</h3>
+    <p class="small">🎧 Une voix douce te guide dans les relaxations : tu peux fermer les yeux.<br>🫧 Un accueil plus simple.<br>🆘 Plus d'aide dans le SOS pour les moments les plus durs, et la possibilité d'écrire au lieu de parler.<br>⏰ Un rappel du soir et 💾 une sauvegarde (dans « Moi »).</p>
+    <button class="btn alt" onclick="S.news=2;save();render()">Super, j'ai vu</button></div>`;
+}
+// ---------------------------------------------------------------- Miku, la mascotte (thème Miku)
+function mascot(m) {
+  if (S.theme !== "miku") return "";
+  const nm = S.name ? " " + esc(S.name) : "", hr = new Date().getHours();
+  const lines = m ? (m.v <= 1 ? [`Je suis là${nm}. On fait le soupir qui détend ensemble ? ♪`, `Les jours gris passent aussi. Je reste avec toi 💙`]
+    : m.v === 2 ? [`Une journée moyenne, c'est OK. Un petit défi pour la faire briller ?`, `Tu avances, même quand ça ne se voit pas ♪`]
+    : [`Yay${nm} ! Note ce qui t'a fait du bien dans tes victoires ✨`, `Tu rayonnes aujourd'hui ♪`])
+    : [hr < 12 ? `Bonjour${nm} ! Tu me dis ta météo du jour ? ☀️` : hr < 19 ? `Coucou${nm} ! Comment tu te sens ? ♪` : `Bonsoir${nm} ! Une petite respiration avant de dormir ? 🌙`];
+  const say = lines[new Date().getDate() % lines.length];
+  return `<div class="mascot"><img src="${m && m.v <= 1 ? "miku-douce.png" : "miku-salut.png"}" alt=""><div class="say">${say}</div></div>`;
+}
+function checkLevel() {
+  const L = lvlInfo(); if (S.lvlSeen === undefined) { S.lvlSeen = L.i; save(); return; }
+  if (L.i > S.lvlSeen) { S.lvlSeen = L.i; save(); vib([40, 60, 40, 60, 80]);
+    const o = document.createElement("div"); o.className = "lvlup";
+    o.innerHTML = `<div>${S.theme === "miku" ? `<img src="miku-fete.png" alt="">` : `<div style="font-size:90px">🎉</div>`}<h1>Niveau ${L.i + 1} !</h1><h2 style="margin-top:0">⚔️ ${L.name}</h2><p class="mute">Bravo${S.name ? " " + esc(S.name) : ""}, tu progresses vraiment ♪</p><button class="btn" style="max-width:260px">Trop bien !</button></div>`;
+    o.onclick = () => o.remove(); document.body.appendChild(o); }
+}
+function setMood(v) { S.mood[today()] = { v, t: Date.now() }; save(); vib(15); render(); }
+
+// ---------------------------------------------------------------- parcours
+function path() {
+  const total = STEPS.length, d = doneCount();
+  return `<h1>Mon parcours</h1><p class="mute">${d} étape${d > 1 ? "s" : ""} sur ${total}. À ton rythme : une étape par jour, c'est très bien.</p>
+  <div class="bar2"><i style="width:${Math.round(d / total * 100)}%"></i></div>
+  <div class="mods">${MODS.map((md, mi) => `<div class="mod"><h2>${md.ic} ${md.t}</h2>${STEPS.map((s, i) => s.m !== mi ? "" :
+    `<div class="step ${S.done[i] ? "done" : ""}" onclick="go('step',${i})"><div class="n">${S.done[i] ? "✓" : i + 1}</div><div class="grow">${esc(s.t)}</div><span class="mute">›</span></div>`).join("")}</div>`).join("")}</div>`;
+}
+function stepView(i) {
+  const s = STEPS[i];
+  return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('path')">‹ Parcours</button>
+  <span class="badge">${MODS[s.m].ic} ${MODS[s.m].t} · étape ${i + 1}</span><h1>${esc(s.t)}</h1>
+  <div class="card"><h3>💡 Pourquoi ça aide</h3><p>${esc(s.why)}</p></div>
+  <div class="card" id="ex"></div>
+  <button class="btn" onclick="finish(${i})">${S.done[i] ? "✓ Déjà faite · la refaire compte aussi" : "J'ai fini cette étape"}</button>`;
+}
+function finish(i) { S.done[i] = today(); save(); vib([20, 40, 20]); const n = nextStep(); toast(n >= 0 ? "Bravo 🌱 Étape suivante prête quand tu veux." : "🎉 Parcours terminé, bravo !"); go("path"); }
+
+// ---------------------------------------------------------------- exercices
+function mountEx(i) {
+  const s = STEPS[i], ex = s.ex, box = $("#ex"), A = S.ans[i] = S.ans[i] || {};
+  const qs = (ex.q || []).map((q, k) => `<label>${esc(q)}</label><textarea data-k="${k}">${esc(A[k] || "")}</textarea>`).join("");
+  const bindQs = () => box.querySelectorAll("textarea[data-k]").forEach(t => t.oninput = () => { A[t.dataset.k] = t.value; save(); });
+  if (ex.k === "read") { box.innerHTML = `<h3>✍️ À toi</h3><p>${esc(ex.txt)}</p>${qs}<p class="small mute">C'est enregistré tout seul, seulement sur ton téléphone.</p>`; bindQs(); }
+  else if (ex.k === "chips") {
+    const sel = new Set(S[ex.key] && Array.isArray(S[ex.key]) ? S[ex.key] : (A.sel || []));
+    const opts = [...new Set([...ex.opts, ...sel])];
+    box.innerHTML = `<h3>✍️ À toi</h3><p>${esc(ex.txt)}</p><div class="chips">${opts.map(o => `<button class="chip ${sel.has(o) ? "on" : ""}">${esc(o)}</button>`).join("")}</div>
+      ${ex.custom ? `<div class="row"><input type="text" id="cus" placeholder="Ajouter la mienne…"><button class="btn" style="width:auto;margin:6px 0 0" id="add">+</button></div>` : ""}${qs}`;
+    const store = () => { const arr = [...sel]; A.sel = arr; if (ex.key === "box") S.box = arr; save(); };
+    box.querySelectorAll(".chip").forEach(c => c.onclick = () => { const v = c.textContent; sel.has(v) ? sel.delete(v) : sel.add(v); c.classList.toggle("on"); store(); });
+    if (ex.custom) $("#add").onclick = () => { const v = $("#cus").value.trim(); if (!v) return; sel.add(v); store(); mountEx(i); };
+    bindQs();
+  }
+  else if (ex.k === "breath") breath(box, ex.pat, ex.min);
+  else if (ex.k === "guide") guide(box, ex.steps);
+  else if (ex.k === "timer") timerEx(box, ex.sec, ex.txt);
+  else if (ex.k === "ground") ground(box, A);
+  else if (ex.k === "thought") thought(box);
+  else if (ex.k === "wins") wins(box);
+  else if (ex.k === "plan") plan(box);
+}
+function breath(box, pat, min, names = ["Inspire", "Bloque", "Expire", "Bloque"]) {
+  box.innerHTML = `<div class="breath"><div class="bubble" id="bub"></div><div class="bword" id="bw">Prête ?</div></div><div class="big" id="bt">${min}:00</div><div class="chips" style="justify-content:center">${voiceChip()}</div><button class="btn" id="bgo">▶ Commencer</button>`;
+  $("#bgo").onclick = () => {
+    stopTimers(); $("#bgo").classList.add("hidden");
+    const end = Date.now() + min * 60000; let ph = -1;
+    const next = () => { do ph = (ph + 1) % 4; while (!pat[ph]);
+      const b = $("#bub"); if (!b) return; b.style.transitionDuration = pat[ph] + "s";
+      b.style.transform = ph === 0 ? "scale(1.9)" : ph === 2 ? "scale(1)" : b.style.transform; $("#bw").textContent = names[ph] + " · " + pat[ph] + " s"; vib(25); say(names[ph]);
+      if (Date.now() < end) timers.push(setTimeout(next, pat[ph] * 1000)); else { $("#bw").textContent = "Bravo 🌿 Comment tu te sens ?"; say("Bravo. Prends un instant pour sentir comment tu te sens."); } };
+    next();
+    timers.push(setInterval(() => { const r = Math.max(0, end - Date.now()), e = $("#bt"); if (e) e.textContent = Math.floor(r / 60000) + ":" + String(Math.floor(r / 1000) % 60).padStart(2, "0"); }, 250));
+  };
+}
+function guide(box, steps) {
+  let k = -1;
+  box.innerHTML = `<h3>🎧 Exercice guidé</h3><p class="small mute">${VOICE.ok ? "Mets le son ou tes écouteurs : une voix douce te guide, <b>tu peux fermer les yeux</b>. Le texte s'affiche aussi ici." : "Lis la phrase, fais-la tranquillement : ça passe tout seul à la suite."}</p><div class="chips">${voiceChip()}</div><div class="big" style="font-size:22px;min-height:96px;display:grid;place-items:center" id="gt">Installe-toi au calme.</div><div class="bar2"><i id="gb" style="width:0"></i></div><button class="btn" id="ggo">▶ Commencer</button>`;
+  const next = () => { k++; if (k >= steps.length) { const f = "C'est fini. Prends ton temps avant de te relever 🌿"; $("#gt").textContent = f; say(f.replace(" 🌿", "")); $("#gb").style.width = "100%"; vib([20, 60, 20]); return; }
+    const [t, sec] = steps[k]; $("#gt").textContent = t; say(t); $("#gb").style.width = Math.round(k / steps.length * 100) + "%"; vib(20); timers.push(setTimeout(next, sec * 1000)); };
+  $("#ggo").onclick = () => { stopTimers(); $("#ggo").classList.add("hidden"); next(); };
+}
+function timerEx(box, sec, txt) {
+  box.innerHTML = `<h3>⏱️ À toi</h3><p>${esc(txt)}</p><div class="big" id="tt">${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}</div><button class="btn" id="tgo">▶ Lancer</button>`;
+  $("#tgo").onclick = () => { stopTimers(); const end = Date.now() + sec * 1000; $("#tgo").classList.add("hidden");
+    timers.push(setInterval(() => { const r = Math.max(0, end - Date.now()), e = $("#tt"); if (!e) return; e.textContent = Math.floor(r / 60000) + ":" + String(Math.ceil(r / 1000) % 60).padStart(2, "0");
+      if (r <= 0) { stopTimers(); e.textContent = "C'est fait 💪"; vib([30, 60, 30]); } }, 250)); };
+}
+function ground(box, A) {
+  const G = [[5, "choses que je VOIS"], [4, "choses que je peux TOUCHER"], [3, "sons que j'ENTENDS"], [2, "odeurs que je SENS"], [1, "chose que je peux GOÛTER ou une chose gentille pour moi"]];
+  box.innerHTML = `<h3>👀 À toi, tranquillement</h3>${G.map(([n, t], k) => `<label><b style="color:var(--acc)">${n}</b> ${t}</label><input type="text" data-g="${k}" value="${esc((A.g || [])[k] || "")}">`).join("")}<p class="small mute">Pas besoin d'écrire si tu préfères les dire dans ta tête.</p>`;
+  box.querySelectorAll("input[data-g]").forEach(x => x.oninput = () => { A.g = A.g || []; A.g[x.dataset.g] = x.value; save(); });
+}
+function thought(box) {
+  box.innerHTML = `<h3>🧶 Démêler</h3>
+  <label>Ce qui s'est passé</label><textarea id="t1"></textarea>
+  <label>La pensée qui fait mal</label><textarea id="t2" placeholder="ex. « Tout le monde me déteste »"></textarea>
+  <label>Mon émotion et sa force (0 à 10) : <b id="t3v">5</b></label><input type="range" min="0" max="10" value="5" id="t3">
+  <label>Ce qui montre que ce n'est peut-être pas 100 % vrai</label><textarea id="t4"></textarea>
+  <label>Une autre façon de voir, plus juste et plus douce</label><textarea id="t5"></textarea>
+  <label>Maintenant, la force de mon émotion : <b id="t6v">5</b></label><input type="range" min="0" max="10" value="5" id="t6">
+  <button class="btn soft" id="tsave">Garder dans mon journal</button>`;
+  ["t3", "t6"].forEach(id => $("#" + id).oninput = e => $("#" + id + "v").textContent = e.target.value);
+  $("#tsave").onclick = () => { S.journal.unshift({ d: today(), kind: "pensée", emo: "", n: +$("#t3").value, n2: +$("#t6").value, sit: $("#t1").value, txt: `Pensée : ${$("#t2").value}\nCe qui la contredit : ${$("#t4").value}\nAutre façon de voir : ${$("#t5").value}` }); save(); toast("Gardé dans ton journal 📔"); $("#tsave").disabled = true; $("#tsave").textContent = "✓ Gardé dans ton journal"; };
+}
+function wins(box) {
+  const w = S.wins[today()] = S.wins[today()] || ["", "", ""];
+  box.innerHTML = `<h3>🏆 Aujourd'hui</h3><p class="small mute">Même minuscule, ça compte : « j'ai bien dormi », « j'ai ri avec quelqu'un », « je suis allée en cours alors que c'était dur ».</p>
+  ${w.map((v, k) => `<label>Victoire ${k + 1}</label><input type="text" data-w="${k}" value="${esc(v)}">`).join("")}
+  ${Object.keys(S.wins).filter(d => d !== today()).sort().reverse().slice(0, 5).map(d => `<div class="entry"><span class="small mute">${fmtD(d)}</span><br>${S.wins[d].filter(Boolean).map(esc).join(" · ")}</div>`).join("")}`;
+  box.querySelectorAll("input[data-w]").forEach(x => x.oninput = () => { w[x.dataset.w] = x.value; save(); });
+}
+const PLAN = [["sign", "Mes signes que ça commence à aller très mal"], ["self", "Ce que je peux faire seule pour me calmer"], ["place", "Des personnes ou des lieux qui me changent les idées"], ["ppl", "Les personnes à qui je peux demander de l'aide (et leur numéro)"], ["pro", "Mon psy et les pros à contacter"], ["safe", "Ce qui peut rendre mon environnement plus sûr"], ["why", "Mes raisons d'aller mieux, ce qui compte pour moi"]];
+function plan(box) {
+  box.innerHTML = `<h3>🛟 Mon plan</h3><p class="small mute">Remplis-le au calme, idéalement avec ton psy. Il sera aussi dans le bouton SOS.</p>
+  ${PLAN.map(([k, t]) => `<label>${t}</label><textarea data-p="${k}">${esc(S.plan[k] || "")}</textarea>`).join("")}`;
+  box.querySelectorAll("textarea[data-p]").forEach(x => x.oninput = () => { S.plan[x.dataset.p] = x.value; save(); });
+}
+
+// ---------------------------------------------------------------- « ce que je ressens maintenant » : aide immédiate
+const FAM = { "Angoissée": "stress", "Stressée": "stress", "Nerveuse": "stress", "Perdue": "stress", "En colère": "colere", "Frustrée": "colere", "Agacée": "colere", "Jalouse": "colere",
+  "Triste": "triste", "Seule": "triste", "Déçue": "triste", "Blessée": "triste", "Rejetée": "triste", "Épuisée": "triste", "Vide": "vide", "Honteuse": "honte" };
+const HELP = {
+  stress: { msg: "Le stress, c'est ton corps qui croit qu'il y a un danger. On va lui montrer que tu es en sécurité, en ralentissant ta respiration.", acts: ["sigh", "square", "ground"] },
+  colere: { msg: "La colère, c'est une énergie énorme. Tu as le droit de la ressentir. On va la faire sortir de ton corps, sans te faire de mal.", acts: ["move", "cold", "wait"] },
+  triste: { msg: "C'est normal d'être triste, tu n'as pas à aller bien tout de suite. On va prendre soin de toi, doucement.", acts: ["coh", "call", "write"] },
+  vide: { msg: "Quand on se sent vide, le corps a besoin de sensations fortes mais sans danger pour se réveiller.", acts: ["cold", "move", "box"] },
+  honte: { msg: "La honte fait croire qu'on est nulle. Ce n'est pas vrai. Regardons ça avec la douceur que tu aurais pour ta meilleure amie.", acts: ["friend", "coh", "write"] },
+  bien: { msg: "Ça fait plaisir 😊 Garde une trace de ce qui t'a fait du bien, ça t'aidera les jours plus durs.", acts: ["wins", "write"] },
+};
+const ACTS = {
+  sigh: ["⚡ Le soupir qui détend (1 min)", b => breath(b, [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""])],
+  square: ["⬜ Respiration carrée (2 min)", b => breath(b, [4, 4, 4, 4], 2)],
+  coh: ["🌬️ Respirer doucement (3 min)", b => breath(b, [5, 0, 5, 0], 3)],
+  ground: ["👀 5-4-3-2-1 : revenir ici", b => ground(b, {})],
+  move: ["🏃 Bouger fort, 1 min", b => timerEx(b, 60, "Saute, cours sur place, fais des montées de genoux à fond. Laisse sortir l'énergie.")],
+  cold: ["🧊 Le froid, 30 s", b => timerEx(b, 30, "Eau très froide sur le visage, ou un glaçon dans la main. Respire lentement.")],
+  wait: ["⏳ Attendre 10 min", b => timerEx(b, 600, "Fais autre chose pendant 10 minutes : musique, marche, douche. L'envie va baisser.")],
+  call: ["📞 Parler à quelqu'un", b => { b.innerHTML = (S.trustTel ? `<a class="tel" href="tel:${esc(S.trustTel)}"><div><b>📞 ${esc(S.trustName || "Ma personne de confiance")}</b><br><span>Appeler maintenant</span></div><span>›</span></a>` : "") + `<a class="tel" href="tel:0800235236"><div><b>💬 Fil Santé Jeunes · 0 800 235 236</b><br><span>Gratuit, anonyme</span></div><span>›</span></a>`; }],
+  write: ["✍️ Écrire ce que je ressens", () => go("journal", "new")],
+  friend: ["💜 La voix de la meilleure amie", () => go("step", 16)],
+  wins: ["🏆 Noter mes victoires", () => go("step", 18)],
+  urge: ["🌊 Surfer sur la vague", () => goUrge()],
+  box: ["🧰 Ma boîte de secours", b => { b.innerHTML = `<div class="chips">${(S.box.length ? S.box : ["Écouter ma playlist", "Prendre une douche", "Danser", "Chanter fort"]).map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div><p class="small mute">Choisis-en une et fais-la maintenant.</p>`; }],
+};
+let NOW = null;
+function nowView() {
+  if (!NOW) return `<h1>Ce que je ressens 💭</h1><p class="mute">Prends 10 secondes pour regarder ce qui se passe en toi. Il n'y a pas de mauvaise réponse.</p>
+    <button class="btn alt" style="border-color:var(--sos)" onclick="goUrge()">🌊 J'ai envie de me faire du mal</button>
+    <div class="card"><label>Je me sens… (un ou plusieurs mots)</label><div class="chips" id="nemo">${EMOS.map(e => `<button class="chip">${e}</button>`).join("")}</div>
+    <label>Force : <b id="nnv">5</b> / 10</label><input type="range" min="0" max="10" value="5" id="nn" oninput="$('#nnv').textContent=this.value">
+    <label>Ce qui se passe (si tu veux)</label><textarea id="nsit" placeholder="Tu peux laisser vide"></textarea>
+    <button class="btn warm" onclick="nowGo()">Aide-moi</button></div>`;
+  const h = HELP[NOW.fam];
+  return `<h1>${NOW.n >= 8 ? "Je suis là 🫧" : "D'accord, je t'entends 🫧"}</h1>
+    ${NOW.n >= 8 ? `<div class="card" style="border-color:var(--sos)"><b>C'est très fort en ce moment (${NOW.n}/10).</b> Ça va redescendre. Commence par le bouton SOS, il est fait pour ça.<button class="btn sos" onclick="openSOS()">🆘 Ouvrir le SOS</button></div>` : ""}
+    <div class="card"><p>${h.msg}</p><p class="small mute">Choisis ce que tu veux essayer :</p>${h.acts.map((a, i) => `<button class="btn ${i ? "alt" : ""}" onclick="nowAct('${a}')">${ACTS[a][0]}</button>`).join("")}</div>
+    <div class="card hidden" id="nact"></div>
+    <div class="card"><h3>Et maintenant, sur 10 ?</h3><input type="range" min="0" max="10" value="${NOW.n}" id="n2" oninput="$('#n2v').textContent=this.value"><div class="big" style="font-size:28px"><span id="n2v">${NOW.n}</span> / 10</div>
+    <button class="btn soft" onclick="nowEnd()">C'est noté</button></div>`;
+}
+function mountNow() { const box = document.getElementById("nemo"); if (box) box.onclick = e => { if (e.target.classList.contains("chip")) e.target.classList.toggle("on"); }; }
+function nowGo() {
+  const emos = [...document.querySelectorAll("#nemo .chip.on")].map(c => c.textContent), n = +$("#nn").value;
+  const fams = emos.map(e => FAM[e] || "bien"), order = ["stress", "colere", "vide", "honte", "triste", "bien"];
+  const fam = emos.length ? order.find(f => fams.includes(f)) : (n >= 5 ? "stress" : "bien");
+  NOW = { emos, n, fam, sit: $("#nsit").value }; vib(20); render(); window.scrollTo(0, 0);
+}
+function nowAct(a) { NOW.act = a; const b = $("#nact"); stopTimers(); b.classList.remove("hidden"); b.innerHTML = ""; ACTS[a][1](b); b.scrollIntoView({ behavior: "smooth", block: "start" }); }
+function nowEnd() {
+  const n2 = +$("#n2").value; stopTimers();
+  S.journal.unshift({ d: today(), kind: "pensée", emo: NOW.emos.join(", "), n: NOW.n, n2, sit: NOW.sit, txt: NOW.act ? "Ce que j'ai fait : " + ACTS[NOW.act][0] : "", act: NOW.act }); save();
+  toast(n2 < NOW.n ? `De ${NOW.n} à ${n2} : tu l'as fait redescendre 💪` : "Merci d'avoir pris ce moment pour toi 💜");
+  NOW = null; go("home");
+}
+
+// ---------------------------------------------------------------- progression façon jeu de rôle
+const LVL = [[0, "Apprentie"], [60, "Exploratrice"], [160, "Aventurière"], [320, "Gardienne"], [520, "Héroïne"], [800, "Légende"]];
+function xp() { return Object.keys(S.done).length * 20 + Object.values(S.defi).filter(Boolean).length * 10 + Object.keys(S.mood).length * 3
+  + S.journal.filter(e => e.n2 !== undefined && e.n2 < e.n).length * 15 + Object.values(S.wins).filter(w => w.some(Boolean)).length * 5; }
+function lvlInfo() { const x = xp(); let i = 0; while (i + 1 < LVL.length && x >= LVL[i + 1][0]) i++;
+  const a = LVL[i][0], b = LVL[i + 1] ? LVL[i + 1][0] : a + 1; return { x, i, name: LVL[i][1], next: LVL[i + 1] ? LVL[i + 1][1] : null, pct: LVL[i + 1] ? Math.round((x - a) / (b - a) * 100) : 100 }; }
+function lvlCard() { const L = lvlInfo();
+  return `<div class="card"><div class="row"><div class="grow"><span class="badge">Niveau ${L.i + 1}</span><h3 style="margin:6px 0 2px">⚔️ ${L.name}</h3></div><div class="big" style="font-size:22px">${L.x} XP</div></div>
+    <div class="bar2"><i style="width:${L.pct}%"></i></div><p class="small mute">${L.next ? `Prochain niveau : ${L.next}. Chaque étape, défi, victoire ou crise surmontée te fait progresser.` : "Niveau maximum. Tu es une légende 👑"}</p></div>`; }
+
+// ---------------------------------------------------------------- ma journée (ce qui rend plus fragile)
+function dayCard() {
+  const d = S.day[today()] || {};
+  const opt = (k, v, t) => `<button class="chip ${d[k] === v ? "on" : ""}" onclick="setDay('${k}','${v}')">${t}</button>`;
+  return `<div class="card"><h3>😴 Ma journée</h3><p class="small mute">Le sommeil, les repas et le sport changent beaucoup la force des émotions.</p>
+    <label>Cette nuit, j'ai dormi : <b>${d.sleep ? d.sleep + " h" : "?"}</b></label><input type="range" min="3" max="12" step="0.5" value="${d.sleep || 7.5}" onchange="setDay('sleep',+this.value)">
+    <div class="chips">${opt("eat", "oui", "🍽️ J'ai bien mangé")}${opt("eat", "peu", "🥄 Un peu")}</div>
+    <div class="chips">${opt("move", "oui", "🏃 J'ai bougé")}${opt("screen", "tard", "📱 Écrans tard hier")}</div></div>`;
+}
+function setDay(k, v) { const d = S.day[today()] = S.day[today()] || {}; d[k] = d[k] === v ? undefined : v; save(); render(); }
+
+// ---------------------------------------------------------------- défi du jour (s'entraîner un peu chaque jour)
+const DEFIS = ["Fais 3 minutes de respiration douce avant de dormir.", "Note 3 victoires ce soir, même minuscules.", "Passe 10 minutes dehors, sans écran.", "Envoie un message gentil à quelqu'un.",
+  "Écoute une chanson qui te fait du bien, en entier, sans rien faire d'autre.", "Bois un grand verre d'eau et mange un vrai repas.", "Fais le 5-4-3-2-1 une fois, même si tout va bien.",
+  "Range un tout petit coin de ta chambre.", "Écris une phrase gentille sur toi.", "Coupe les écrans 30 minutes avant de dormir.", "Fais le Stress express avant un moment qui t'angoisse.",
+  "Dis à quelqu'un une chose qui t'a fait plaisir aujourd'hui.", "Fais 10 minutes de sport ou de danse.", "Repère une pensée piège aujourd'hui et donne-lui son nom.",
+  "Prends une douche en te concentrant sur les sensations de l'eau.", "Fais quelque chose de créatif 15 minutes : dessin, musique, écriture.", "Couche-toi à une heure raisonnable ce soir.",
+  "Remarque une émotion et dis-la avec un mot précis.", "Fais une chose que tu repousses depuis longtemps, juste 5 minutes.", "Regarde une photo d'un bon souvenir et raconte-le-toi.",
+  "Fais le scan du corps avant de dormir.", "Prends des nouvelles d'une amie.", "Fais une action opposée : si tu as envie de t'isoler, va voir quelqu'un 10 minutes.",
+  "Prépare tes affaires de demain pour être plus tranquille le matin.", "Souris à quelqu'un, même à la caissière.", "Écris ce qui te stresse, puis une petite chose que tu peux faire.",
+  "Va marcher en écoutant ta playlist.", "Fais la respiration carrée en cours ou dans le bus.", "Dis non à quelque chose qui ne te fait pas du bien.", "Félicite-toi pour un effort, pas pour un résultat.",
+  "Avance 20 minutes sur ton cosplay, juste pour le plaisir.", "Chante à fond une chanson que tu adores (Miku compte !).", "Crée une playlist « quand ça va pas » avec 5 chansons qui t'apaisent.", "Dessine ou cherche l'inspiration pour ton prochain cosplay.", "Regarde une photo de toi en cosplay et note ce dont tu es fière.",
+  "Demande-toi ce que ton personnage préféré ferait face à une difficulté d'aujourd'hui.", "Partage une création ou une idée de cosplay avec une amie."];
+function dayNum(d) { return Math.floor(new Date(d + "T12:00").getTime() / 86400000); }
+function streak() { let n = 0, d = new Date(); for (;;) { const k = ymd(d); if (S.defi[k]) { n++; d.setDate(d.getDate() - 1); } else if (k === today()) d.setDate(d.getDate() - 1); else break; } return n; }
+function defiCard() {
+  const t = DEFIS[dayNum(today()) % DEFIS.length], ok = S.defi[today()], st = streak();
+  return `<div class="card"><div class="row"><h3 class="grow">🎯 Défi du jour</h3>${st ? `<span class="badge">🔥 ${st} jour${st > 1 ? "s" : ""}</span>` : ""}</div><p>${t}</p>
+    <button class="btn ${ok ? "alt" : "soft"}" onclick="S.defi[today()]=!S.defi[today()];save();vib(20);render()">${ok ? "✓ Fait, bravo !" : "C'est fait"}</button></div>`;
+}
+
+// ---------------------------------------------------------------- mes outils (TCD-A : STOP, action opposée, vérifier les faits…)
+const TOOLS = [
+  { ic: "🌊", t: "Envie de me faire du mal", go: () => goUrge() },
+  { ic: "⚡", t: "Stress express", go: () => go("stress") }, { ic: "🌬️", t: "Respirer 3 min", go: () => go("breathe") },
+  { ic: "🏆", t: "Mes victoires", go: () => go("step", 18) }, { ic: "👀", t: "5-4-3-2-1", go: () => go("step", 12) }, { ic: "🧊", t: "Le froid", go: () => go("step", 10) }, { ic: "🏃", t: "Bouger fort", go: () => go("step", 11) },
+  { ic: "🎭", t: "Mon personnage", id: "hero" }, { ic: "✋", t: "STOP", id: "stop" }, { ic: "🔄", t: "L'action opposée", id: "opp" }, { ic: "🔍", t: "Vérifier les faits", id: "facts" },
+  { ic: "🏝️", t: "Mon endroit calme", go: () => go("step", 8) }, { ic: "🧶", t: "Démêler une pensée", go: () => go("step", 15) }, { ic: "💜", t: "Voix de la meilleure amie", go: () => go("step", 16) },
+];
+function tools() {
+  return `<h1>Mes outils 🧰</h1><p class="mute">Tout ce que tu as appris, à portée de main. Utilise ceux qui marchent pour toi.</p>
+  ${TOOLS.map((x, i) => `<div class="step" onclick="${x.id ? `go('tool','${x.id}')` : `TOOLS[${i}].go()`}"><div class="n">${x.ic}</div><div class="grow">${x.t}</div><span class="mute">›</span></div>`).join("")}`;
+}
+const TOOLDEF = {
+  hero: { t: "🎭 Mon personnage", why: "Quand on se glisse dans la peau d'un personnage qu'on admire, on emprunte un peu de sa force. Les psys appellent ça « l'alter ego » : se demander ce que ferait son héros aide à prendre du recul et à oser. Et c'est exactement ce que tu fais quand tu cosplayes !",
+    q: ["Mon personnage (celui que j'adore ou que je cosplaye, ex. Miku) :", "Ses qualités que j'admire :", "Ces qualités, je les ai aussi un peu, quand… :", "Face à ce qui est dur pour moi en ce moment, il ou elle ferait… :", "Ce qu'il ou elle me dirait pour m'encourager :"] },
+  stop: { t: "✋ STOP", why: "Quand une émotion te pousse à agir tout de suite (crier, envoyer un message, te faire du mal), STOP crée une pause pour que ce soit toi qui décides.",
+    q: ["S — Stop : je m'arrête, je ne bouge pas. Ce qui me pousse à agir :", "T — Temps de respirer : je fais 3 grandes respirations. Comment je me sens après ?", "O — Observer : ce qui se passe vraiment, autour et en moi :", "P — Poursuivre en pleine conscience : ce que je choisis de faire qui m'aide vraiment :"] },
+  opp: { t: "🔄 L'action opposée", why: "Chaque émotion donne une envie d'agir. Quand cette envie n'aide pas, faire exactement l'inverse fait baisser l'émotion. Ex. : tristesse → envie de s'isoler → aller voir quelqu'un. Peur → éviter → y aller doucement. Colère → attaquer → s'éloigner gentiment et respirer.",
+    q: ["Mon émotion :", "L'envie qu'elle me donne :", "Est-ce que cette envie m'aide vraiment, là ?", "L'action opposée que je vais faire, à fond :"] },
+  facts: { t: "🔍 Vérifier les faits", why: "Une émotion très forte vient parfois d'une interprétation, pas des faits. Comme un détective, on sépare ce qui s'est vraiment passé de ce qu'on en a pensé.",
+    q: ["Ce qui s'est passé, juste les faits (comme une caméra) :", "Ce que j'en ai pensé, mon interprétation :", "D'autres explications possibles :", "Est-ce que mon émotion et sa force collent aux faits ? Ce que je retiens :"] },
+};
+function toolView(id) { const d = TOOLDEF[id]; return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('tools')">‹ Mes outils</button><h1>${d.t}</h1><div class="card"><h3>💡 À quoi ça sert</h3><p>${d.why}</p></div><div class="card" id="tbox"></div>`; }
+function mountTool(id) { const d = TOOLDEF[id], A = S.ans["t_" + id] = S.ans["t_" + id] || {}, b = $("#tbox");
+  b.innerHTML = d.q.map((q, k) => `<label>${q}</label><textarea data-k="${k}">${esc(A[k] || "")}</textarea>`).join("") + `<button class="btn soft" id="tsv">Garder dans mon journal</button>`;
+  b.querySelectorAll("textarea").forEach(t => t.oninput = () => { A[t.dataset.k] = t.value; save(); });
+  $("#tsv").onclick = () => { S.journal.unshift({ d: today(), kind: "note", emo: d.t, n: "", sit: "", txt: d.q.map((q, k) => A[k] ? q + "\n" + A[k] : "").filter(Boolean).join("\n\n") }); save(); toast("Gardé 📔"); };
+}
+
+// ---------------------------------------------------------------- préparer ma séance (résumé à montrer au psy)
+function last(nd) { return [...Array(nd)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return ymd(d); }); }
+function seance() {
+  const ds = last(14), moods = ds.map(d => S.mood[d]).filter(Boolean), avg = moods.length ? moods.reduce((a, m) => a + m.v, 0) / moods.length : null;
+  const J = S.journal.filter(e => ds.includes(e.d)), strong = J.filter(e => +e.n >= 7);
+  const cnt = {}; J.forEach(e => (e.emo || "").split(", ").filter(Boolean).forEach(x => cnt[x] = (cnt[x] || 0) + 1));
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const helped = {}; J.filter(e => e.act && e.n2 !== undefined && e.n2 < e.n).forEach(e => helped[e.act] = (helped[e.act] || 0) + 1);
+  const help = Object.entries(helped).sort((a, b) => b[1] - a[1]).map(([a, n]) => (ACTS[a] ? ACTS[a][0] : a) + (n > 1 ? " (×" + n + ")" : ""));
+  const steps = Object.entries(S.done).filter(([, d]) => ds.includes(d)).map(([i]) => STEPS[i].t);
+  const sl = ds.map(d => S.day[d] && S.day[d].sleep).filter(Boolean), slA = sl.length ? (sl.reduce((a, b) => a + b, 0) / sl.length).toFixed(1) : null;
+  const urg = J.filter(e => e.kind === "envie"), urgOk = urg.filter(e => e.n2 < e.n).length;
+  const txt = [`Mes 2 dernières semaines (Ma Bulle)`, avg !== null ? `Météo moyenne : ${MOODS[Math.round(avg)]} (${moods.length} jours notés)` : "", `Moments forts (7/10 ou plus) : ${strong.length}`,
+    urg.length ? `Moments où j'ai eu envie de me faire du mal : ${urg.length} (l'envie a baissé ${urgOk} fois)` : "",
+    top.length ? `Émotions les plus fréquentes : ${top.map(([e, n]) => e + " ×" + n).join(", ")}` : "", help.length ? `Ce qui m'a aidée : ${help.join(", ")}` : "",
+    slA ? `Sommeil moyen : ${slA} h` : "", steps.length ? `Étapes faites : ${steps.join(", ")}` : "", S.seance ? `Ce dont je veux parler : ${S.seance}` : ""].filter(Boolean).join("\n");
+  return `<h1>Préparer ma séance 📋</h1><p class="mute">Un résumé de tes 2 dernières semaines, à montrer à ton psy si tu veux. C'est toi qui choisis ce que tu partages.</p>
+  <div class="card"><h3>Ma météo</h3><canvas id="ch" width="600" height="180"></canvas></div>
+  <div class="card"><p style="white-space:pre-wrap">${esc(txt)}</p></div>
+  <div class="card"><label>Ce dont j'aimerais parler à la prochaine séance</label><textarea oninput="S.seance=this.value;save()">${esc(S.seance)}</textarea>
+  <button class="btn" onclick="shareTxt(${JSON.stringify(txt).replace(/"/g, "&quot;")})">📤 Envoyer ou copier ce résumé</button></div>`;
+}
+function shareTxt(t) { if (S.seance && !t.includes(S.seance)) t += "\nCe dont je veux parler : " + S.seance;
+  if (navigator.share) navigator.share({ title: "Ma Bulle", text: t }).catch(() => {}); else navigator.clipboard.writeText(t).then(() => toast("Copié ✓"), () => toast("Copie impossible")); }
+
+// ---------------------------------------------------------------- envie de me faire du mal : « surfer sur la vague »
+// Contenu à faire relire par son psy. Pas de détail sur les gestes, seulement : distance, attendre que l'envie passe,
+// sensations fortes sans danger, ne pas rester seule, premiers soins et quand appeler le 15.
+let U = null;
+function goUrge() { U = { n0: null, pts: [], away: false }; go("urge"); }
+function urgeView() {
+  if (!U) U = { n0: null, pts: [], away: false };
+  const tel = S.trustTel ? esc(S.trustTel) : "", n0 = U.n0 === null ? 7 : U.n0;
+  return `<h1>Je suis là 🫧</h1>
+  ${S.theme === "miku" ? `<div class="mascot"><img src="miku-douce.png" alt=""><div class="say">Merci d'être venue ici. On traverse ça ensemble 💙</div></div>` : ""}
+  <div class="card"><p><b>Tu as bien fait d'ouvrir cette page.</b> C'est déjà une victoire.</p>
+    <p>Cette envie est une vague : elle monte, elle atteint un pic, puis elle redescend. Elle ne dure pas. <b>Tu n'es pas obligée de lui obéir.</b></p>
+    <label>Mon envie, là, maintenant : <b id="u0v">${n0}</b> / 10</label><input type="range" min="0" max="10" value="${n0}" id="u0" oninput="$('#u0v').textContent=this.value;U.n0=+this.value"></div>
+  <div class="card"><h3>1. Mets de la distance</h3><p>Si quelque chose qui peut te blesser est près de toi, pose-le dans une autre pièce ou donne-le à quelqu'un. Va là où il y a du monde.</p>
+    <button class="btn ${U.away ? "alt" : "soft"}" onclick="U.away=true;this.className='btn alt';this.textContent='✓ C\\'est fait, bravo';vib(20)">${U.away ? "✓ C'est fait, bravo" : "C'est fait"}</button></div>
+  <div class="card"><h3>2. Surfe sur la vague (10 min)</h3><p class="small mute">Lance le minuteur. Toutes les 2 minutes, note où en est ton envie : tu vas la voir redescendre.</p>
+    <div class="big" id="ut">10:00</div><canvas id="uch" width="600" height="130" style="height:100px"></canvas>
+    <div id="uask" class="hidden"><label>Mon envie maintenant : <b id="uav">5</b> / 10</label><input type="range" min="0" max="10" value="5" id="ua" oninput="$('#uav').textContent=this.value"><button class="btn alt" onclick="urgePt()">Noter</button></div>
+    <button class="btn" id="ugo" onclick="urgeGo()">▶ Lancer les 10 minutes</button></div>
+  <div class="card"><h3>3. Une sensation forte, sans te blesser</h3><p class="small mute">Pendant que la vague passe, donne à ton corps quelque chose d'intense mais sans danger :</p>
+    <div class="chips">${["🧊 Un glaçon dans la main", "💦 Eau très froide sur le visage", "🚿 Une douche", "🍋 Croquer dans un citron", "✊ Serrer fort un coussin", "🗣️ Crier dans un oreiller", "📄 Déchirer du papier", "🏃 Bouger à fond 1 minute", "🎵 Ma musique à fond"].map(x => `<span class="chip">${x}</span>`).join("")}</div>
+    ${S.music ? `<a class="tel" href="${esc(S.music)}" target="_blank" rel="noopener"><div><b>🎵 Ma playlist qui m'apaise</b></div><span>›</span></a>` : ""}</div>
+  <div class="card"><h3>4. Ne reste pas seule</h3>
+    ${tel ? `<a class="tel" href="tel:${tel}"><div><b>📞 Appeler ${esc(S.trustName || "ma personne de confiance")}</b></div><span>›</span></a>
+    <a class="tel" href="sms:${tel}?body=${encodeURIComponent("Ça ne va pas trop, tu peux m'appeler ou venir me voir ?")}"><div><b>💬 Lui envoyer un message tout prêt</b><br><span>« Ça ne va pas trop, tu peux m'appeler ou venir me voir ? »</span></div><span>›</span></a>` : `<p class="small mute">Ajoute ta personne de confiance dans « Moi » : tu pourras l'appeler ou lui écrire d'ici.</p>`}
+    <a class="tel" href="tel:0800235236"><div><b>📞 Fil Santé Jeunes · 0 800 235 236</b><br><span>Gratuit et anonyme</span></div><span>›</span></a>
+    <a class="tel" href="https://www.filsantejeunes.com/" target="_blank" rel="noopener"><div><b>⌨️ Fil Santé Jeunes par tchat</b><br><span>Si tu préfères écrire plutôt que parler</span></div><span>›</span></a>
+    <a class="tel" href="tel:3114"><div><b>💜 3114</b><br><span>Si tu as des idées de mourir · gratuit, 24 h/24</span></div><span>›</span></a></div>
+  <details class="card"><summary><b>🩹 Si tu t'es déjà fait mal</b></summary>
+    <p>Ce n'est pas le moment de t'en vouloir. Prends soin de toi comme tu le ferais pour une amie.</p>
+    <p>Rince à l'eau claire, appuie avec un linge propre si ça saigne, puis mets un pansement.</p>
+    <p><b>Appelle le 15 ou le 112</b> si ça saigne beaucoup, si c'est profond, ou si ça ne s'arrête pas après 10 minutes d'appui.</p>
+    <p>Et parles-en à ton adulte de confiance ou à ton psy : tu mérites d'être aidée, pas jugée.</p>
+    <a class="tel" href="tel:15"><div><b>🚑 15 · SAMU</b></div><span>›</span></a></details>
+  <div class="card"><h3>Et maintenant, mon envie sur 10 ?</h3><input type="range" min="0" max="10" value="5" id="u2" oninput="$('#u2v').textContent=this.value"><div class="big" style="font-size:28px"><span id="u2v">5</span> / 10</div>
+    <button class="btn soft" onclick="urgeEnd()">C'est noté</button></div>`;
+}
+function urgeGo() {
+  stopTimers(); $("#ugo").classList.add("hidden"); $("#uask").classList.remove("hidden"); vib(25);
+  if (U.n0 === null) U.n0 = +$("#u0").value; if (!U.pts.length) U.pts.push(U.n0); drawUrge();
+  const end = Date.now() + 600000; let ask = Date.now() + 120000;
+  timers.push(setInterval(() => { const r = Math.max(0, end - Date.now()), e = $("#ut"); if (!e) return;
+    e.textContent = Math.floor(r / 60000) + ":" + String(Math.floor(r / 1000) % 60).padStart(2, "0");
+    if (r > 0 && Date.now() >= ask) { ask += 120000; vib([30, 50, 30]); toast("Où en est ton envie ? Note-la 🌊"); }
+    if (r <= 0) { stopTimers(); e.textContent = "10 minutes tenues 💪"; vib([30, 60, 30, 60, 30]); } }, 250));
+}
+function urgePt() { U.pts.push(+$("#ua").value); vib(15); drawUrge(); }
+function drawUrge() {
+  const c = $("#uch"); if (!c) return; const x = c.getContext("2d"), W = c.width, H = c.height, p = U.pts; x.clearRect(0, 0, W, H);
+  if (!p.length) { x.fillStyle = "rgba(255,255,255,.35)"; x.font = "22px sans-serif"; x.textAlign = "center"; x.fillText("Ta vague s'affichera ici 🌊", W / 2, H / 2 + 8); return; }
+  const px = i => p.length === 1 ? W / 2 : 24 + i * (W - 48) / (p.length - 1), py = v => H - 12 - v / 10 * (H - 44);
+  x.strokeStyle = getComputedStyle(document.body).getPropertyValue("--acc").trim() || "#7fe0d0"; x.lineWidth = 5; x.lineJoin = "round";
+  x.beginPath(); p.forEach((v, i) => i ? x.lineTo(px(i), py(v)) : x.moveTo(px(i), py(v))); x.stroke();
+  x.fillStyle = "#fff"; x.font = "bold 18px sans-serif"; x.textAlign = "center";
+  p.forEach((v, i) => { x.beginPath(); x.arc(px(i), py(v), 6, 0, 7); x.fill(); x.fillText(v, px(i), py(v) - 12); });
+}
+function urgeEnd() {
+  const n2 = +$("#u2").value, n0 = U.n0 === null ? +$("#u0").value : U.n0; stopTimers();
+  S.journal.unshift({ d: today(), kind: "envie", emo: "Envie de me faire du mal", n: n0, n2, sit: "",
+    txt: [U.away ? "J'ai mis de la distance." : "", U.pts.length > 1 ? "Ma vague : " + U.pts.join(" → ") : ""].filter(Boolean).join("\n"), act: "urge" }); save();
+  toast(n2 < n0 ? `De ${n0} à ${n2} : tu as surfé la vague 🌊💪` : "Tu as pris soin de toi 💜");
+  U = null; go("home");
+  if (n2 >= 7) openSOS();
+}
+
+// ---------------------------------------------------------------- rappel du soir et sauvegarde
+function addReminder() {
+  const v = $("#rh").value || "20:00", [hh, mm] = v.split(":"), d = new Date(); d.setDate(d.getDate() + 1);
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Ma Bulle//FR", "BEGIN:VEVENT", "UID:ma-bulle-" + Date.now() + "@ma-bulle",
+    "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z", "DTSTART:" + ymd(d).replace(/-/g, "") + "T" + hh.padStart(2, "0") + (mm || "00").padStart(2, "0") + "00",
+    "DURATION:PT5M", "RRULE:FREQ=DAILY", "SUMMARY:🫧 Ma Bulle", "DESCRIPTION:Ta météo du jour et tes 3 victoires ♪",
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Ma Bulle", "TRIGGER:PT0M", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  download(new Blob([ics], { type: "text/calendar" }), "rappel-ma-bulle.ics");
+  S.remind = v; save(); toast("Ouvre le fichier pour l'ajouter à ton agenda 📅");
+}
+function download(blob, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function exportData() {
+  const name = "ma-bulle-sauvegarde-" + today() + ".json", blob = new Blob([JSON.stringify(S)], { type: "application/json" });
+  S.lastBackup = today(); save();
+  let f = null; try { f = new File([blob], name, { type: "application/json" }); } catch (e) {}
+  if (f && navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: "Ma Bulle" }).catch(() => {});
+  else { download(blob, name); toast("Sauvegarde téléchargée ✓"); }
+  render();
+}
+function importData(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = () => { try { const d = JSON.parse(r.result); if (!d || typeof d !== "object" || !Array.isArray(d.journal)) throw 0;
+      if (!confirm("Remplacer les données de ce téléphone par cette sauvegarde ?")) return;
+      localStorage.setItem(K, JSON.stringify(d)); location.reload(); } catch (e) { toast("Ce fichier n'est pas une sauvegarde Ma Bulle"); } };
+  r.readAsText(f);
+}
+
+// ---------------------------------------------------------------- journal
+function journal() {
+  if (cur === "new") return `<h1>Écrire</h1><div class="card">
+    <label>Ce que je ressens (choisis)</label><div class="chips" id="jemo">${EMOS.map(e => `<button class="chip">${e}</button>`).join("")}</div>
+    <label>Force : <b id="jnv">5</b> / 10</label><input type="range" min="0" max="10" value="5" id="jn" oninput="$('#jnv').textContent=this.value">
+    <label>Ce qui s'est passé</label><textarea id="jsit"></textarea>
+    <label>Ce que j'ai fait, ce qui m'a aidée</label><textarea id="jtxt"></textarea>
+    <button class="btn" onclick="saveEntry()">Garder</button><button class="btn alt" onclick="go('journal')">Annuler</button></div>`;
+  return `<h1>Mon journal</h1><p class="mute small">🔒 Rien que pour toi, il reste sur ton téléphone.</p><button class="btn" onclick="go('journal','new')">✍️ Écrire maintenant</button>
+  ${S.journal.length ? S.journal.map((e, k) => `<div class="card"><div class="row"><span class="badge">${fmtD(e.d)}</span>${e.emo ? `<span class="badge">${esc(e.emo)}</span>` : ""}<span class="badge">${e.kind === "pensée" ? "🧶 " + e.n + " → " + e.n2 : e.kind === "envie" ? "🌊 " + e.n + " → " + e.n2 : e.n + "/10"}</span><span class="grow"></span><button class="chip" onclick="delEntry(${k})">🗑</button></div>
+    ${e.sit ? `<p>${esc(e.sit)}</p>` : ""}${e.txt ? `<p class="mute" style="white-space:pre-wrap">${esc(e.txt)}</p>` : ""}</div>`).join("") : `<p class="mute">Ton journal est vide pour l'instant.</p>`}`;
+}
+function saveEntry() { const emo = [...document.querySelectorAll("#jemo .chip.on")].map(c => c.textContent).join(", ");
+  S.journal.unshift({ d: today(), kind: "note", emo, n: +$("#jn").value, sit: $("#jsit").value, txt: $("#jtxt").value }); save(); toast("Gardé 📔"); go("journal"); }
+document.addEventListener("click", e => { if (e.target.closest("#jemo .chip")) e.target.classList.toggle("on"); });
+function delEntry(k) { if (confirm("Supprimer ce moment du journal ?")) { S.journal.splice(k, 1); save(); render(); } }
+
+// ---------------------------------------------------------------- progrès
+function progress() {
+  const days = Object.keys(S.mood).length, d = doneCount(), w = Object.values(S.wins).filter(x => x.some(Boolean)).length;
+  return `<h1>Mes progrès 🌱</h1>${lvlCard()}<button class="btn soft" onclick="go('seance')">📋 Préparer ma séance avec mon psy</button><div class="card"><h3>Ma météo des 14 derniers jours</h3><canvas id="ch" width="600" height="180"></canvas><p class="small mute">⛈️ en bas, ☀️ en haut. Les jours difficiles font partie du chemin.</p></div>
+  <div class="card"><div class="row"><div class="grow"><div class="big" style="font-size:32px">${d}</div><p class="small mute" style="text-align:center">étapes faites</p></div>
+  <div class="grow"><div class="big" style="font-size:32px">${days}</div><p class="small mute" style="text-align:center">jours de météo</p></div>
+  <div class="grow"><div class="big" style="font-size:32px">${w}</div><p class="small mute" style="text-align:center">jours de victoires</p></div></div></div>
+  ${insight()}
+  <div class="card"><h3>💬 Pour toi</h3><p>${d === 0 ? "Chaque grand chemin commence par une petite étape. La première prend 5 minutes." : d < 10 ? "Tu avances, une étape après l'autre. C'est exactement comme ça que ça marche." : "Regarde tout ce que tu as déjà appris. Tu peux être fière de toi."}</p></div>`;
+}
+function insight() {
+  const pairs = Object.keys(S.mood).map(d => [S.mood[d].v, S.day[d] && S.day[d].sleep]).filter(p => p[1]);
+  const lo = pairs.filter(p => p[1] < 7).map(p => p[0]), hi = pairs.filter(p => p[1] >= 7).map(p => p[0]);
+  if (lo.length < 3 || hi.length < 3) return `<div class="card"><h3>🔎 Ce qui m'influence</h3><p class="small mute">Remplis « Ma journée » quelques jours : je te montrerai le lien entre ton sommeil et ta météo.</p></div>`;
+  const a = x => x.reduce((s, v) => s + v, 0) / x.length, dl = a(hi) - a(lo);
+  return `<div class="card"><h3>🔎 Ce qui m'influence</h3><p>${dl > 0.4 ? `Les jours où tu as dormi <b>7 h ou plus</b>, ta météo est nettement meilleure (${MOODS[Math.round(a(hi))]} contre ${MOODS[Math.round(a(lo))]}). Le sommeil est un vrai super-pouvoir pour toi.` : "Pour l'instant, ton sommeil ne semble pas changer beaucoup ta météo. Continue à noter, on verra avec plus de jours."}</p></div>`;
+}
+function drawChart() {
+  const c = $("#ch"); if (!c) return; const x = c.getContext("2d"), W = c.width, H = c.height; x.clearRect(0, 0, W, H);
+  const ds = [...Array(14)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - 13 + i); return ymd(d); });
+  const bw = W / 14;
+  ds.forEach((d, i) => { const m = S.mood[d]; x.fillStyle = "rgba(255,255,255,.07)"; x.fillRect(i * bw + 6, 10, bw - 12, H - 40);
+    if (m) { const h = (m.v + 1) / 5 * (H - 40); const g = x.createLinearGradient(0, H - 30 - h, 0, H - 30); const cs = getComputedStyle(document.body); g.addColorStop(0, cs.getPropertyValue("--acc2").trim() || "#b79bff"); g.addColorStop(1, cs.getPropertyValue("--acc").trim() || "#7fe0d0"); x.fillStyle = g; x.fillRect(i * bw + 6, H - 30 - h, bw - 12, h);
+      x.font = "22px sans-serif"; x.textAlign = "center"; x.fillText(MOODS[m.v], i * bw + bw / 2, H - 34 - h); }
+    x.fillStyle = "#b9b3d6"; x.font = "15px sans-serif"; x.textAlign = "center"; x.fillText(new Date(d + "T12:00").getDate(), i * bw + bw / 2, H - 8); });
+}
+
+// ---------------------------------------------------------------- réglages
+function settings() {
+  return `<h1>Moi</h1><div class="card">
+  <label>Mon prénom</label><input type="text" id="sn" value="${esc(S.name)}">
+  <label>Ma personne de confiance (son prénom)</label><input type="text" id="stn" value="${esc(S.trustName)}" placeholder="ex. Papa">
+  <label>Son numéro</label><input type="tel" id="stt" value="${esc(S.trustTel)}" placeholder="06…">
+  <label>🎵 Ma playlist qui m'apaise (lien Spotify, Deezer, YouTube…)</label><input type="text" id="smu" value="${esc(S.music)}" placeholder="Colle le lien ici">
+  <button class="btn" onclick="saveSet()">Enregistrer</button></div>
+  ${VOICE.ok ? `<div class="card"><h3>🎧 La voix qui me guide</h3><p class="small mute">Elle lit les exercices de relaxation et de respiration à voix haute.</p><div class="chips">${voiceChip()}</div></div>` : ""}
+  <div class="card"><h3>🎨 Mon thème</h3><div class="chips">
+    <button class="chip ${S.theme === "miku" ? "on" : ""}" onclick="S.theme='miku';save();render()">🎤 Miku (turquoise)</button>
+    <button class="chip ${S.theme !== "miku" ? "on" : ""}" onclick="S.theme='bulle';save();render()">🫧 Bulle (violet)</button></div></div>
+  <div class="card"><h3>🔒 Code secret</h3><p class="small mute">Pour que personne d'autre ne puisse ouvrir ton journal. 4 chiffres.</p>
+  <input type="password" inputmode="numeric" maxlength="4" id="spin" placeholder="${S.pin ? "••••  (laisse vide pour garder)" : "Aucun code"}">
+  <button class="btn alt" onclick="savePin()">${S.pin ? "Changer le code" : "Mettre un code"}</button>${S.pin ? `<button class="btn alt" onclick="S.pin='';save();toast('Code retiré');render()">Retirer le code</button>` : ""}</div>
+  <div class="card"><h3>⏰ Un petit rappel chaque soir</h3><p class="small mute">Pour penser à ta météo et à tes victoires. Le rappel s'appelle juste « Ma Bulle » : personne ne saura de quoi il s'agit.</p>
+  <label>À quelle heure ?</label><input type="time" id="rh" value="${esc(S.remind || "20:00")}">
+  <button class="btn alt" onclick="addReminder()">📅 Ajouter à mon agenda</button>
+  <p class="small mute">Si ça ne marche pas sur ton téléphone : mets une alarme tous les jours dans l'appli Horloge, nommée « Ma Bulle ».</p></div>
+  <div class="card"><h3>💾 Sauvegarder mes données</h3><p class="small mute">Tout est seulement sur ce téléphone. Fais une sauvegarde de temps en temps pour ne rien perdre si tu changes de téléphone. ⚠️ Le fichier contient ton journal : garde-le pour toi, dans tes fichiers ou ton drive perso.</p>
+  ${S.lastBackup ? `<p class="small">Dernière sauvegarde : ${fmtD(S.lastBackup)}</p>` : ""}
+  <button class="btn alt" onclick="exportData()">💾 Faire une sauvegarde</button>
+  <label class="btn alt" style="text-align:center">📂 Récupérer une sauvegarde<input type="file" accept=".json,application/json" style="display:none" onchange="importData(this)"></label></div>
+  <div class="card"><h3>📲 L'installer comme une appli</h3><p class="small mute">iPhone : bouton Partager ⬆️ puis « Sur l'écran d'accueil ». Android : menu ⋮ puis « Installer l'application ».</p></div>
+  <div class="card"><h3>💜 À savoir</h3><p class="small">Ma Bulle t'aide entre les séances, mais elle ne remplace pas ton psy. N'hésite pas à lui montrer ton parcours et ton plan de secours.</p><p class="small mute">Tout reste sur ce téléphone : rien n'est envoyé sur Internet.</p></div>`;
+}
+function saveSet() { S.name = $("#sn").value.trim(); S.trustName = $("#stn").value.trim(); S.trustTel = $("#stt").value.replace(/[^\d+]/g, ""); S.music = $("#smu").value.trim(); save(); toast("Enregistré ✓"); }
+function savePin() { const p = $("#spin").value; if (/^\d{4}$/.test(p)) { S.pin = p; save(); toast("Code enregistré 🔒"); render(); } else toast("Il faut 4 chiffres"); }
+
+// ---------------------------------------------------------------- SOS
+function openSOS() {
+  stopTimers(); const o = $("#sos"); o.classList.remove("hidden");
+  const box = S.box.length ? S.box : ["Écouter ma playlist", "Prendre une douche", "Tenir un glaçon", "Appeler quelqu'un"];
+  o.innerHTML = `<div class="inner"><div class="row"><h1 class="grow">Je suis là 🫧</h1><button class="chip" onclick="closeSOS()">✕ Fermer</button></div>
+  ${S.theme === "miku" ? `<div class="mascot"><img src="miku-douce.png" alt=""><div class="say">On y va ensemble, doucement. Tu n'es pas seule 💙</div></div>` : ""}
+  <p>Tu traverses un moment très dur. <b>Ça va redescendre.</b> On y va une chose à la fois.</p>
+  <button class="btn warm" onclick="closeSOS();goUrge()">🌊 J'ai envie de me faire du mal</button>
+  <div class="card"><h3>1. Respire avec la bulle</h3><div id="sosb"></div></div>
+  <div class="card"><h3>2. Fais redescendre vite</h3>
+    <button class="btn" onclick="sosT('🧊 Eau très froide sur le visage, ou un glaçon dans la main. Respire lentement.',30)">🧊 Le froid, 30 s</button>
+    <button class="btn soft" onclick="sosT('🏃 Saute, cours sur place, à fond. Laisse sortir l\\'énergie.',60)">🏃 Bouger fort, 1 min</button>
+    <button class="btn alt" onclick="sosT('⏳ Attends 10 minutes en faisant autre chose. L\\'envie va baisser.',600)">⏳ Attendre 10 min</button>
+    <div class="big" id="sost" style="font-size:30px"></div><p class="small" id="sostx"></p></div>
+  <div class="card"><h3>3. Ce qui m'aide</h3>${S.music ? `<a class="tel" href="${esc(S.music)}" target="_blank" rel="noopener"><div><b>🎵 Ma playlist qui m'apaise</b><br><span>L'écouter maintenant</span></div><span>›</span></a>` : ""}<div class="chips">${box.map(b => `<span class="chip">${esc(b)}</span>`).join("")}</div>
+  ${S.plan.self ? `<p class="small mute" style="white-space:pre-wrap">${esc(S.plan.self)}</p>` : ""}${(S.ans.t_hero || {})[4] ? `<p class="small"><b>🎭 ${esc((S.ans.t_hero || {})[0] || "Mon personnage")} me dirait :</b> <span style="white-space:pre-wrap">${esc(S.ans.t_hero[4])}</span></p>` : ""}${S.plan.why ? `<p class="small"><b>Mes raisons :</b> <span style="white-space:pre-wrap">${esc(S.plan.why)}</span></p>` : ""}</div>
+  <div class="card"><h3>4. Parler à quelqu'un</h3>
+    ${S.trustTel ? `<a class="tel" href="tel:${esc(S.trustTel)}"><div><b>📞 ${esc(S.trustName || "Ma personne de confiance")}</b><br><span>Appeler maintenant</span></div><span>›</span></a>
+    <a class="tel" href="sms:${esc(S.trustTel)}?body=${encodeURIComponent("Ça ne va pas trop, tu peux m'appeler ou venir me voir ?")}"><div><b>💬 Lui envoyer un message tout prêt</b><br><span>Si tu n'arrives pas à parler</span></div><span>›</span></a>` : `<p class="small mute">Ajoute ta personne de confiance dans « Moi ».</p>`}
+    <a class="tel" href="tel:0800235236"><div><b>📞 Fil Santé Jeunes · 0 800 235 236</b><br><span>Gratuit, anonyme, 12-25 ans</span></div><span>›</span></a>
+    <a class="tel" href="https://www.filsantejeunes.com/" target="_blank" rel="noopener"><div><b>⌨️ Fil Santé Jeunes par tchat</b><br><span>Pour écrire au lieu de parler</span></div><span>›</span></a>
+    <a class="tel" href="tel:3114"><div><b>💜 3114</b><br><span>Si tu as des idées de mourir · gratuit, 24 h/24</span></div><span>›</span></a>
+    <a class="tel" href="tel:112"><div><b>🚑 112</b><br><span>Urgence, si tu es en danger ou blessée</span></div><span>›</span></a>
+  </div></div>`;
+  breath($("#sosb"), [4, 0, 6, 0], 3);
+}
+function sosT(txt, sec) { stopTimers(); breath($("#sosb"), [4, 0, 6, 0], 3); $("#sostx").textContent = txt; const end = Date.now() + sec * 1000; vib(30);
+  timers.push(setInterval(() => { const r = Math.max(0, end - Date.now()), e = $("#sost"); if (!e) return; e.textContent = Math.floor(r / 60000) + ":" + String(Math.ceil(r / 1000) % 60).padStart(2, "0"); if (r <= 0) { stopTimers(); e.textContent = "💪 Bravo, tu l'as fait"; vib([30, 60, 30]); } }, 250)); }
+function closeSOS() { stopTimers(); $("#sos").classList.add("hidden"); render(); }
+
+// ---------------------------------------------------------------- code secret
+function lockScreen() {
+  let p = ""; const L = $("#lock"); L.classList.remove("hidden");
+  const draw = () => L.innerHTML = `<div style="text-align:center"><div style="font-size:48px">🫧</div><h2>Ma Bulle</h2><p class="mute">Ton code secret</p>
+    <div class="pin">${[0, 1, 2, 3].map(i => `<i class="${i < p.length ? "f" : ""}"></i>`).join("")}</div>
+    <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, "", 0, "⌫"].map(k => k === "" ? "<span></span>" : `<button data-k="${k}">${k}</button>`).join("")}</div>
+    <button class="btn sos" style="max-width:240px" onclick="openSOS()">🆘 SOS sans code</button></div>`;
+  draw();
+  L.onclick = e => { const k = e.target.dataset && e.target.dataset.k; if (k === undefined) return; vib(10);
+    if (k === "⌫") p = p.slice(0, -1); else if (p.length < 4) p += k;
+    if (p.length === 4) { if (p === S.pin) { L.classList.add("hidden"); return; } p = ""; vib([60, 40, 60]); }
+    draw(); };
+}
+// ---------------------------------------------------------------- petit message
+function toast(m) { const t = document.createElement("div"); t.textContent = m;
+  t.style.cssText = "position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#2d2550;border:1px solid rgba(255,255,255,.2);color:#fff;padding:10px 16px;border-radius:12px;z-index:40;font-size:14px";
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+
+render();
+if (S.pin) lockScreen();
+// le journal se reverrouille si l'appli reste en arrière-plan plus d'une minute
+let hiddenAt = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (S.pin && hiddenAt && Date.now() - hiddenAt > 60000 && $("#lock").classList.contains("hidden")) lockScreen();
+});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>

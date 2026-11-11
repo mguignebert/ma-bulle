@@ -181,10 +181,48 @@ document.querySelectorAll("nav.bar button").forEach(b => b.onclick = () => go(b.
 const doneCount = () => Object.keys(S.done).length;
 const nextStep = () => STEPS.findIndex((_, i) => !S.done[i]);
 
+// ---------------------------------------------------------------- premier lancement
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+let W = isIOS && !standalone ? 0 : 1;
+function welcome() {
+  const img = n => S.theme === "miku" ? `<div style="text-align:center"><img src="${n}" alt="" style="width:150px;animation:bob 3.2s ease-in-out infinite"></div>` : `<div style="font-size:70px;text-align:center">🫧</div>`;
+  if (W === 0) return `${img("miku-salut.png")}<h1 style="text-align:center">Installe d'abord Ma Bulle</h1>
+    <div class="card"><p>Pour l'avoir comme une vraie appli sur ton iPhone :</p>
+      <p><b>1.</b> Touche le bouton <b>Partager</b> <span style="font-size:20px">⬆️</span> en bas de Safari.</p>
+      <p><b>2.</b> Choisis <b>« Sur l'écran d'accueil »</b> (fais défiler si besoin).</p>
+      <p><b>3.</b> Touche <b>Ajouter</b>, puis ouvre Ma Bulle depuis sa nouvelle icône 🫧</p></div>
+    <p class="small mute">Important : ce que tu écrirais ici, dans Safari, ne passerait pas dans l'appli installée. Mieux vaut commencer directement depuis l'icône.</p>
+    <button class="btn alt" onclick="W=1;render()">Continuer quand même dans Safari</button>`;
+  if (W === 1) return `${img("miku-salut.png")}<h1 style="text-align:center">Bienvenue dans ta bulle</h1>
+    <div class="card"><p>Ma Bulle, c'est un endroit <b>rien qu'à toi</b> pour comprendre tes émotions et les apaiser quand elles deviennent trop fortes.</p>
+      <p>🔒 <b>Tout reste sur ton téléphone.</b> Rien n'est envoyé sur Internet : personne ne peut lire ce que tu écris, même pas tes parents.</p>
+      <p>🧭 Un petit parcours de 5 minutes par jour, des outils pour les moments durs, et un bouton <b>SOS</b> toujours en haut à droite.</p></div>
+    <button class="btn" onclick="W=2;render()">C'est parti</button>`;
+  if (W === 2) return `<h1>Faisons connaissance 💙</h1>
+    <div class="card"><label>Ton prénom (ou ton pseudo)</label><input type="text" id="wn" value="${esc(S.name)}">
+      <label>Une personne de confiance à appeler si ça va très mal</label><input type="text" id="wtn" value="${esc(S.trustName)}" placeholder="ex. Papa, Maman, une amie…">
+      <label>Son numéro</label><input type="tel" id="wtt" value="${esc(S.trustTel)}" placeholder="06…">
+      <p class="small mute">Tu pourras l'appeler ou lui envoyer un message tout prêt depuis le SOS. Tu peux changer ça plus tard dans « Moi ».</p></div>
+    <button class="btn" onclick="S.name=$('#wn').value.trim();S.trustName=$('#wtn').value.trim();S.trustTel=$('#wtt').value.replace(/[^\\d+]/g,'');save();W=3;render()">Suivant</button>`;
+  return `<h1>Dernière chose 🔒</h1>
+    <div class="card"><h3>Un code secret ?</h3><p class="small mute">4 chiffres pour que personne d'autre n'ouvre ta bulle. Facultatif.</p>
+      <input type="password" inputmode="numeric" maxlength="4" id="wpin" placeholder="Pas de code"></div>
+    ${VOICE.ok ? `<div class="card"><h3>🎧 La voix qui te guide</h3><p class="small mute">Dans les relaxations, une voix douce te guide pour que tu puisses fermer les yeux. Monte le son pour l'essayer.</p><button class="btn alt" onclick="S.voice=true;say('Coucou. Je suis là pour te guider, tout doucement.')">▶ Écouter la voix</button></div>` : ""}
+    <button class="btn" onclick="welcomeEnd()">Entrer dans ma bulle ✨</button>`;
+}
+function welcomeEnd() {
+  const p = ($("#wpin") || {}).value || "";
+  if (p && !/^\d{4}$/.test(p)) { toast("Le code doit faire 4 chiffres (ou laisse vide)"); return; }
+  if (p) S.pin = p; S.onboarded = true; S.news = 2; save(); vib([20, 40, 20]); go("home");
+}
+
 function render() {
   document.body.classList.toggle("miku", S.theme === "miku");
+  $("#nav").classList.toggle("hidden", !S.onboarded);
   document.documentElement.style.background = S.theme === "miku" ? "#0d1416" : "#1a1433";
   document.querySelector('meta[name="theme-color"]').content = S.theme === "miku" ? "#0d1416" : "#1a1433";
+  if (!S.onboarded) { $("#app").innerHTML = welcome(); return; }
   document.querySelectorAll("nav.bar button").forEach(b => b.classList.toggle("on", b.dataset.v === view || (view === "step" && b.dataset.v === "path")));
   const A = $("#app");
   if (view === "home") A.innerHTML = home();
@@ -526,7 +564,7 @@ function urgeView() {
     ${S.music ? `<a class="tel" href="${esc(S.music)}" target="_blank" rel="noopener"><div><b>🎵 Ma playlist qui m'apaise</b></div><span>›</span></a>` : ""}</div>
   <div class="card"><h3>4. Ne reste pas seule</h3>
     ${tel ? `<a class="tel" href="tel:${tel}"><div><b>📞 Appeler ${esc(S.trustName || "ma personne de confiance")}</b></div><span>›</span></a>
-    <a class="tel" href="sms:${tel}?body=${encodeURIComponent("Ça ne va pas trop, tu peux m'appeler ou venir me voir ?")}"><div><b>💬 Lui envoyer un message tout prêt</b><br><span>« Ça ne va pas trop, tu peux m'appeler ou venir me voir ? »</span></div><span>›</span></a>` : `<p class="small mute">Ajoute ta personne de confiance dans « Moi » : tu pourras l'appeler ou lui écrire d'ici.</p>`}
+    <a class="tel" href="sms:${tel}?&body=${encodeURIComponent("Ça ne va pas trop, tu peux m'appeler ou venir me voir ?")}"><div><b>💬 Lui envoyer un message tout prêt</b><br><span>« Ça ne va pas trop, tu peux m'appeler ou venir me voir ? »</span></div><span>›</span></a>` : `<p class="small mute">Ajoute ta personne de confiance dans « Moi » : tu pourras l'appeler ou lui écrire d'ici.</p>`}
     <a class="tel" href="tel:0800235236"><div><b>📞 Fil Santé Jeunes · 0 800 235 236</b><br><span>Gratuit et anonyme</span></div><span>›</span></a>
     <a class="tel" href="https://www.filsantejeunes.com/" target="_blank" rel="noopener"><div><b>⌨️ Fil Santé Jeunes par tchat</b><br><span>Si tu préfères écrire plutôt que parler</span></div><span>›</span></a>
     <a class="tel" href="tel:3114"><div><b>💜 3114</b><br><span>Si tu as des idées de mourir · gratuit, 24 h/24</span></div><span>›</span></a></div>
@@ -688,7 +726,7 @@ function openSOS() {
   ${S.plan.self ? `<p class="small mute" style="white-space:pre-wrap">${esc(S.plan.self)}</p>` : ""}${(S.ans.t_hero || {})[4] ? `<p class="small"><b>🎭 ${esc((S.ans.t_hero || {})[0] || "Mon personnage")} me dirait :</b> <span style="white-space:pre-wrap">${esc(S.ans.t_hero[4])}</span></p>` : ""}${S.plan.why ? `<p class="small"><b>Mes raisons :</b> <span style="white-space:pre-wrap">${esc(S.plan.why)}</span></p>` : ""}</div>
   <div class="card"><h3>4. Parler à quelqu'un</h3>
     ${S.trustTel ? `<a class="tel" href="tel:${esc(S.trustTel)}"><div><b>📞 ${esc(S.trustName || "Ma personne de confiance")}</b><br><span>Appeler maintenant</span></div><span>›</span></a>
-    <a class="tel" href="sms:${esc(S.trustTel)}?body=${encodeURIComponent("Ça ne va pas trop, tu peux m'appeler ou venir me voir ?")}"><div><b>💬 Lui envoyer un message tout prêt</b><br><span>Si tu n'arrives pas à parler</span></div><span>›</span></a>` : `<p class="small mute">Ajoute ta personne de confiance dans « Moi ».</p>`}
+    <a class="tel" href="sms:${esc(S.trustTel)}?&body=${encodeURIComponent("Ça ne va pas trop, tu peux m'appeler ou venir me voir ?")}"><div><b>💬 Lui envoyer un message tout prêt</b><br><span>Si tu n'arrives pas à parler</span></div><span>›</span></a>` : `<p class="small mute">Ajoute ta personne de confiance dans « Moi ».</p>`}
     <a class="tel" href="tel:0800235236"><div><b>📞 Fil Santé Jeunes · 0 800 235 236</b><br><span>Gratuit, anonyme, 12-25 ans</span></div><span>›</span></a>
     <a class="tel" href="https://www.filsantejeunes.com/" target="_blank" rel="noopener"><div><b>⌨️ Fil Santé Jeunes par tchat</b><br><span>Pour écrire au lieu de parler</span></div><span>›</span></a>
     <a class="tel" href="tel:3114"><div><b>💜 3114</b><br><span>Si tu as des idées de mourir · gratuit, 24 h/24</span></div><span>›</span></a>

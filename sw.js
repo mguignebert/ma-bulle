@@ -1,5 +1,5 @@
 // Ma Bulle : marche hors connexion. Réseau d'abord (toujours la dernière version), cache si pas de réseau.
-const C = "ma-bulle-v8", F = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "miku-salut.png", "miku-douce.png", "miku-fete.png"];
+const C = "ma-bulle-v9", F = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "miku-salut.png", "miku-douce.png", "miku-fete.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => c.addAll(F))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(n => n !== C).map(n => caches.delete(n))))); self.clients.claim(); });
 self.addEventListener("fetch", e => {

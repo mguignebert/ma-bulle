@@ -76,6 +76,9 @@ nav.bar button .i{display:block;font-size:22px;line-height:1.2} nav.bar button.o
 .entry{border-left:3px solid var(--acc2);padding:4px 0 4px 12px;margin:12px 0}
 canvas{width:100%;height:150px}
 .hidden{display:none!important}
+.bubble.slow{animation:breathe 10s ease-in-out infinite;animation-play-state:paused} .bubble.slow.on{animation-play-state:running}
+@keyframes breathe{50%{transform:scale(1.55)}}
+.stxt{min-height:84px;font-size:19px;line-height:1.45;padding:0 6px;transition:opacity .6s}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0} .quick .btn{margin:0}
 details.card summary{cursor:pointer;list-style:none} details.card summary::-webkit-details-marker{display:none}
 details.card summary::after{content:" ›";color:var(--mute)} details.card[open] summary{margin-bottom:6px}
@@ -96,8 +99,10 @@ details.card summary::after{content:" ›";color:var(--mute)} details.card[open]
 <div id="sos" class="sos-wrap hidden"></div>
 <div id="lock" class="lock hidden"></div>
 <script src="voix/voix.js"></script>
+<script src="seances/seances.js"></script>
 
 <script>
+if (typeof SEANCES === "undefined") window.SEANCES = {};
 /* Ma Bulle — trousse émotionnelle et parcours pour apprendre à gérer ses émotions.
    Tout reste sur le téléphone (localStorage), rien n'est envoyé nulle part. Ne remplace pas un suivi par un psy. */
 const K = "maBulle.v1";
@@ -114,6 +119,7 @@ const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e
 // voix qui guide les exercices : phrases enregistrées à l'avance (voix féminine douce, fichiers dans voix/,
 // marchent hors connexion). Si une phrase n'a pas d'enregistrement, on se rabat sur une voix féminine du téléphone.
 const VA = typeof Audio !== "undefined" ? new Audio() : null;
+const SA = typeof Audio !== "undefined" ? new Audio() : null;   // lecteur des séances audio
 const SYN = "speechSynthesis" in window;
 const VOICE = { ok: !!VA || SYN, v: null };
 const MALE = /thomas|paul|henri|nicolas|claude|daniel|antoine|jean|thierry|fabrice|gerard|gérard|remy|rémy|male|homme/i;
@@ -130,7 +136,7 @@ function say(t) {
   if (f && VA) { try { if (SYN) speechSynthesis.cancel(); VA.pause(); VA.src = f; const p = VA.play(); if (p && p.catch) p.catch(() => synth(t)); return; } catch (e) {} }
   synth(t);
 }
-const hush = () => { try { if (VA) VA.pause(); if (SYN) speechSynthesis.cancel(); } catch (e) {} };
+const hush = () => { try { if (VA) VA.pause(); if (SA && !SA.paused) SA.pause(); if (SYN) speechSynthesis.cancel(); } catch (e) {} };
 function voiceChip() { return VOICE.ok ? `<button class="chip ${S.voice !== false ? "on" : ""}" onclick="toggleVoice(this)">${S.voice !== false ? "🔊 Voix activée" : "🔇 Voix coupée"}</button>` : ""; }
 function toggleVoice(b) { S.voice = S.voice === false; save(); if (S.voice === false) hush(); else say("Je suis là. Je te guide.");
   if (b) { b.classList.toggle("on", S.voice !== false); b.textContent = S.voice !== false ? "🔊 Voix activée" : "🔇 Voix coupée"; } }
@@ -155,11 +161,11 @@ const STEPS = [
   { m: 1, t: "La respiration carrée", why: "Inspirer, bloquer, expirer, bloquer : 4 temps égaux. Compter occupe l'esprit et le souffle ralentit tout seul. Pratique en cours ou dans le bus, personne ne le voit.",
     ex: { k: "breath", pat: [4, 4, 4, 4], min: 2 } },
   { m: 1, t: "Serrer pour relâcher", why: "On contracte un muscle quelques secondes puis on relâche : le corps découvre la différence entre tendu et détendu. Très efficace avant de dormir.",
-    ex: { k: "guide", steps: [["Installe-toi assise ou allongée. Ferme les yeux si tu veux.", 8], ["Serre fort les poings… tiens…", 6], ["Relâche. Sens la chaleur dans tes mains.", 10], ["Remonte les épaules vers les oreilles… serre…", 6], ["Relâche. Laisse-les tomber.", 10], ["Plisse fort le visage, yeux et bouche…", 6], ["Relâche tout le visage. La mâchoire se desserre.", 10], ["Contracte le ventre…", 6], ["Relâche. Laisse ta respiration revenir.", 10], ["Pousse les pieds dans le sol, serre les jambes…", 6], ["Relâche. Tout ton corps est plus lourd, plus calme.", 12]] } },
+    ex: { k: "audio", id: "serrer" } },
   { m: 1, t: "Le scan du corps", why: "Exercice de sophrologie : on promène son attention dans le corps, sans rien changer. Ça ramène dans le présent et ça apaise les pensées qui tournent.",
-    ex: { k: "guide", steps: [["Installe-toi confortablement. Respire tranquillement.", 10], ["Porte ton attention sur tes pieds. Sens leur poids, leur température.", 12], ["Remonte vers tes jambes. Laisse-les se détendre.", 12], ["Ton ventre se soulève et redescend avec ta respiration.", 12], ["Tes épaules. Laisse-les descendre un peu.", 12], ["Ton visage : le front se lisse, la mâchoire se relâche.", 12], ["Sens ton corps tout entier, posé, en sécurité.", 15], ["Quand tu es prête, bouge doucement les doigts et ouvre les yeux.", 8]] } },
+    ex: { k: "audio", id: "scan" } },
   { m: 1, t: "Mon endroit calme", why: "Le cerveau réagit à ce qu'on imagine presque comme à ce qu'on vit. Un endroit calme bien imaginé devient un refuge où tu peux aller en 30 secondes.",
-    ex: { k: "read", txt: "Ferme les yeux et imagine un endroit où tu te sens bien et en sécurité, réel ou inventé. Puis décris-le avec tes 5 sens.", q: ["C'est où ?", "Ce que je vois et ce que j'entends :", "Ce que je sens (odeurs, température, sur la peau) :"] } },
+    ex: { k: "read", audio: "endroit", txt: "Ferme les yeux et imagine un endroit où tu te sens bien et en sécurité, réel ou inventé. Puis décris-le avec tes 5 sens.", q: ["C'est où ?", "Ce que je vois et ce que j'entends :", "Ce que je sens (odeurs, température, sur la peau) :"] } },
   { m: 2, t: "La règle des 10 minutes", why: "Une envie très forte (crier, partir, se faire du mal) est au plus haut au début puis baisse. Attendre 10 minutes en faisant autre chose laisse passer le pic.",
     ex: { k: "timer", sec: 600, txt: "Lance le minuteur et fais autre chose en attendant : respire, bouge, écoute une musique, parle à quelqu'un. À la fin, regarde où tu en es sur 10." } },
   { m: 2, t: "Le froid qui calme", why: "Le froid sur le visage (eau très froide, glaçon dans la main) ralentit le cœur en quelques secondes : c'est un réflexe du corps. Un des moyens les plus rapides de faire redescendre une crise.",
@@ -175,7 +181,7 @@ const STEPS = [
   { m: 3, t: "Démêler une pensée", why: "Écrire une pensée qui fait mal et la regarder comme une hypothèse, pas comme une vérité, fait souvent baisser l'émotion.",
     ex: { k: "thought" } },
   { m: 3, t: "La voix de la meilleure amie", why: "On est souvent bien plus dure avec soi qu'avec les autres. Se parler comme à une amie qu'on aime change tout.",
-    ex: { k: "read", txt: "Pense à quelque chose qui te fait te sentir nulle ou coupable en ce moment.", q: ["Ce que je me dis dans ma tête :", "Ce que je dirais à ma meilleure amie si elle vivait la même chose :", "Une phrase gentille que je peux me redire :"] } },
+    ex: { k: "read", audio: "douceur", txt: "Pense à quelque chose qui te fait te sentir nulle ou coupable en ce moment.", q: ["Ce que je me dis dans ma tête :", "Ce que je dirais à ma meilleure amie si elle vivait la même chose :", "Une phrase gentille que je peux me redire :"] } },
   { m: 4, t: "Une lettre pour moi", why: "S'écrire avec douceur, comme on écrirait à quelqu'un qu'on aime, aide à se sentir moins seule face à ce qu'on vit.",
     ex: { k: "read", txt: "Écris-toi quelques lignes, avec bienveillance. Tu peux commencer par « Je sais que c'est dur en ce moment… ».", q: ["Ma lettre :"] } },
   { m: 4, t: "Mes 3 victoires du jour", why: "Le cerveau retient d'abord le négatif. Noter chaque soir 3 petites choses réussies ou agréables l'entraîne à voir aussi le reste. À refaire souvent !",
@@ -247,6 +253,8 @@ function render() {
   else if (view === "seance") { A.innerHTML = seance(); drawChart(); }
   else if (view === "now") { A.innerHTML = nowView(); mountNow(); }
   else if (view === "urge") { A.innerHTML = urgeView(); drawUrge(); }
+  else if (view === "sessions") A.innerHTML = sessionsList();
+  else if (view === "session") { A.innerHTML = sessionView(cur); mountSession(cur); }
   else if (view === "stress") { A.innerHTML = `<h1>Stress express ⚡</h1><p class="mute">Le soupir qui détend : <b>2 inspirations</b> par le nez (une grande, puis une petite pour remplir à fond), puis <b>une longue expiration</b> par la bouche. 1 minute suffit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""]); }
   else if (view === "breathe") { A.innerHTML = `<h1>Respirer</h1><p class="mute">Suis la bulle. Inspire quand elle grossit, expire quand elle rétrécit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [5, 0, 5, 0], 3); }
   checkLevel();
@@ -268,7 +276,8 @@ function home() {
   <button class="btn warm" style="font-size:18px;padding:16px" onclick="go('now')">💭 Ce que je ressens maintenant</button>
   ${n >= 0 ? `<div class="card"><span class="badge">${MODS[STEPS[n].m].ic} ${MODS[STEPS[n].m].t}</span><h3 style="margin-top:8px">Ta prochaine étape : ${esc(STEPS[n].t)}</h3><p class="small mute">${esc(STEPS[n].why)}</p><button class="btn" onclick="go('step',${n})">Commencer (5 min)</button></div>`
     : `<div class="card"><h3>🎉 Tu as fini tout le parcours !</h3><p class="mute small">Tu peux refaire les étapes qui t'ont aidée autant que tu veux.</p></div>`}
-  <div class="quick"><button class="btn alt" onclick="go('stress')">⚡ Stress express</button><button class="btn alt" onclick="go('breathe')">🌬️ Respirer</button>
+  <div class="quick"><button class="btn soft" onclick="go('sessions')">🎧 Séances audio</button><button class="btn soft" onclick="openSess('sommeil')">🌙 S'endormir</button>
+    <button class="btn alt" onclick="go('stress')">⚡ Stress express</button><button class="btn alt" onclick="go('breathe')">🌬️ Respirer</button>
     <button class="btn alt" onclick="go('journal','new')">✍️ Écrire</button><button class="btn alt" onclick="go('tools')">🧰 Mes outils</button></div>
   ${defiCard()}
   ${dayCard()}`;
@@ -323,7 +332,9 @@ function mountEx(i) {
   const s = STEPS[i], ex = s.ex, box = $("#ex"), A = S.ans[i] = S.ans[i] || {};
   const qs = (ex.q || []).map((q, k) => `<label>${esc(q)}</label><textarea data-k="${k}">${esc(A[k] || "")}</textarea>`).join("");
   const bindQs = () => box.querySelectorAll("textarea[data-k]").forEach(t => t.oninput = () => { A[t.dataset.k] = t.value; save(); });
-  if (ex.k === "read") { box.innerHTML = `<h3>✍️ À toi</h3><p>${esc(ex.txt)}</p>${qs}<p class="small mute">C'est enregistré tout seul, seulement sur ton téléphone.</p>`; bindQs(); }
+  const sessBtn = id => SEANCES[id] ? `<button class="btn soft" onclick="openSess('${id}',()=>go('step',${i}))">🎧 ${SEANCES[id].t} · séance guidée (${Math.round(SEANCES[id].d / 60)} min)</button>` : "";
+  if (ex.k === "audio") { box.innerHTML = `<h3>🎧 Séance guidée</h3><p>Mets tes écouteurs ou monte le son. Une voix douce te guide, avec ${SEANCES[ex.id] ? SEANCES[ex.id].amb.toLowerCase().replace(/^\S+ /, "une ") : "une ambiance"} en fond : tu peux fermer les yeux.</p>${sessBtn(ex.id)}`; }
+  else if (ex.k === "read") { box.innerHTML = `${ex.audio ? `<p class="small mute">Tu peux d'abord écouter la séance guidée, puis écrire ce qui t'est venu.</p>${sessBtn(ex.audio)}` : ""}<h3>✍️ À toi</h3><p>${esc(ex.txt)}</p>${qs}<p class="small mute">C'est enregistré tout seul, seulement sur ton téléphone.</p>`; bindQs(); }
   else if (ex.k === "chips") {
     const sel = new Set(S[ex.key] && Array.isArray(S[ex.key]) ? S[ex.key] : (A.sel || []));
     const opts = [...new Set([...ex.opts, ...sel])];
@@ -458,7 +469,59 @@ function nowEnd() {
 
 // ---------------------------------------------------------------- progression façon jeu de rôle
 const LVL = [[0, "Apprentie"], [60, "Exploratrice"], [160, "Aventurière"], [320, "Gardienne"], [520, "Héroïne"], [800, "Légende"]];
+// ---------------------------------------------------------------- séances audio (voix + ambiance, fichiers dans seances/)
+let sessBack = () => go("sessions"), wake = null;
+const fmtT = s => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+function openSess(id, back) { sessBack = back || (() => go("sessions")); go("session", id); }
+async function keepAwake(on) { try { if (on && "wakeLock" in navigator && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => wake = null); } else if (!on && wake) { await wake.release(); wake = null; } } catch (e) {} }
+function sessionsList() {
+  const n = S.sess || {};
+  return `<h1>Séances audio 🎧</h1><p class="mute">Mets tes écouteurs, installe-toi, et laisse-toi guider par la voix.</p>
+  ${Object.entries(SEANCES).map(([id, s]) => `<div class="step" onclick="openSess('${id}')"><div class="n">${s.amb.split(" ")[0]}</div><div class="grow"><b>${s.t}</b><br><span class="small mute">${s.desc} · ${Math.round(s.d / 60)} min</span></div>${n[id] ? `<span class="badge">✓ ${n[id]}</span>` : ""}<span class="mute">›</span></div>`).join("")}
+  <p class="small mute">Une séance déjà écoutée marche ensuite même sans Internet.</p>`;
+}
+function sessionView(id) {
+  const s = SEANCES[id];
+  return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="sessBack()">‹ Retour</button>
+  <h1>${s.t}</h1><p class="mute">${s.desc}<br><span class="small">${s.amb} · ${Math.round(s.d / 60)} min</span></p>
+  <div class="card" style="text-align:center"><div class="breath" style="height:210px"><div class="bubble slow" id="sbub"></div></div>
+    <div class="stxt" id="stxt">Installe-toi, mets tes écouteurs si tu veux,<br>puis appuie sur ▶ quand tu es prête.</div>
+    <div class="bar2" style="margin:14px 0 6px"><i id="sbar" style="width:0"></i></div>
+    <div class="row small mute"><span id="scur">0:00</span><span class="grow"></span><span>${fmtT(s.d)}</span></div>
+    <button class="btn" id="splay" disabled>Chargement…</button>
+    <div class="chips" style="justify-content:center"><button class="chip ${S.showTxt !== false ? "on" : ""}" onclick="S.showTxt=S.showTxt===false;save();this.classList.toggle('on');sessTick()">📝 Afficher les phrases</button></div></div>`;
+}
+async function mountSession(id) {
+  const s = SEANCES[id]; if (!SA) return;
+  // on charge le fichier en entier (blob) : lecture fiable sur iPhone, et mis en cache pour marcher hors connexion
+  let url = s.f; try { const r = await fetch(s.f); if (r.ok) url = URL.createObjectURL(await r.blob()); } catch (e) {}
+  if (view !== "session" || cur !== id) { if (url.startsWith("blob:")) URL.revokeObjectURL(url); return; }
+  if (SA._u && SA._u.startsWith("blob:")) URL.revokeObjectURL(SA._u);
+  SA._u = url; SA._id = id; SA.src = url; SA.preload = "auto";
+  const b = $("#splay"); b.disabled = false; b.textContent = "▶ Écouter";
+  b.onclick = () => { if (SA.paused) { const p = SA.play(); if (p && p.catch) p.catch(() => toast("Touche encore ▶")); } else SA.pause(); };
+  SA.onplay = () => { const x = $("#splay"); if (x) x.textContent = "⏸ Pause"; const u = $("#sbub"); if (u) u.classList.add("on"); keepAwake(true); };
+  SA.onpause = () => { const x = $("#splay"); if (x && !SA.ended) x.textContent = "▶ Reprendre"; const u = $("#sbub"); if (u) u.classList.remove("on"); keepAwake(false); };
+  SA.ontimeupdate = sessTick;
+  SA.onended = () => sessEnd(id);
+}
+function sessTick() {
+  const s = SEANCES[SA._id], e = $("#stxt"); if (!s || !e || SA.ended) return;
+  const t = SA.currentTime || 0; let txt = "";
+  for (const [at, p] of s.tl) if (at <= t + .2) txt = p;
+  if (!SA.paused || t > 0) e.textContent = S.showTxt === false ? "🎧" : (txt || "…");
+  const bar = $("#sbar"), c = $("#scur"); if (bar) bar.style.width = Math.min(100, t / s.d * 100) + "%"; if (c) c.textContent = fmtT(t);
+}
+function sessEnd(id) {
+  S.sess = S.sess || {}; S.sess[id] = (S.sess[id] || 0) + 1; save(); keepAwake(false);
+  const e = $("#stxt"), b = $("#splay"), u = $("#sbub"); if (u) u.classList.remove("on");
+  if (e) e.innerHTML = id === "sommeil" ? "Bonne nuit 🌙" : "C'est fini 🌿<br><span class='small mute'>Prends ton temps. Tu as pris soin de toi.</span>";
+  if (b) { b.textContent = "↺ Réécouter"; b.onclick = () => { SA.currentTime = 0; SA.play(); }; }
+  vib([20, 60, 20]);
+}
+
 function xp() { return Object.keys(S.done).length * 20 + Object.values(S.defi).filter(Boolean).length * 10 + Object.keys(S.mood).length * 3
+  + Object.values(S.sess || {}).reduce((a, b) => a + b, 0) * 8
   + S.journal.filter(e => e.n2 !== undefined && e.n2 < e.n).length * 15 + Object.values(S.wins).filter(w => w.some(Boolean)).length * 5; }
 function lvlInfo() { const x = xp(); let i = 0; while (i + 1 < LVL.length && x >= LVL[i + 1][0]) i++;
   const a = LVL[i][0], b = LVL[i + 1] ? LVL[i + 1][0] : a + 1; return { x, i, name: LVL[i][1], next: LVL[i + 1] ? LVL[i + 1][1] : null, pct: LVL[i + 1] ? Math.round((x - a) / (b - a) * 100) : 100 }; }
@@ -500,6 +563,7 @@ function defiCard() {
 // ---------------------------------------------------------------- mes outils (TCD-A : STOP, action opposée, vérifier les faits…)
 const TOOLS = [
   { ic: "🌊", t: "Envie de me faire du mal", go: () => goUrge() },
+  { ic: "🎧", t: "Séances audio guidées", go: () => go("sessions") }, { ic: "🌙", t: "S'endormir", go: () => openSess("sommeil") },
   { ic: "⚡", t: "Stress express", go: () => go("stress") }, { ic: "🌬️", t: "Respirer 3 min", go: () => go("breathe") },
   { ic: "🏆", t: "Mes victoires", go: () => go("step", 18) }, { ic: "👀", t: "5-4-3-2-1", go: () => go("step", 12) }, { ic: "🧊", t: "Le froid", go: () => go("step", 10) }, { ic: "🏃", t: "Bouger fort", go: () => go("step", 11) },
   { ic: "🎭", t: "Mon personnage", id: "hero" }, { ic: "✋", t: "STOP", id: "stop" }, { ic: "🔄", t: "L'action opposée", id: "opp" }, { ic: "🔍", t: "Vérifier les faits", id: "facts" },
@@ -566,7 +630,9 @@ function urgeView() {
     <label>Mon envie, là, maintenant : <b id="u0v">${n0}</b> / 10</label><input type="range" min="0" max="10" value="${n0}" id="u0" oninput="$('#u0v').textContent=this.value;U.n0=+this.value"></div>
   <div class="card"><h3>1. Mets de la distance</h3><p>Si quelque chose qui peut te blesser est près de toi, pose-le dans une autre pièce ou donne-le à quelqu'un. Va là où il y a du monde.</p>
     <button class="btn ${U.away ? "alt" : "soft"}" onclick="U.away=true;this.className='btn alt';this.textContent='✓ C\\'est fait, bravo';vib(20)">${U.away ? "✓ C'est fait, bravo" : "C'est fait"}</button></div>
-  <div class="card"><h3>2. Surfe sur la vague (10 min)</h3><p class="small mute">Lance le minuteur. Toutes les 2 minutes, note où en est ton envie : tu vas la voir redescendre.</p>
+  <div class="card"><h3>2. Surfe sur la vague (10 min)</h3>
+    ${SEANCES.envie ? `<button class="btn soft" onclick="openSess('envie',()=>go('urge'))">🎧 Une voix pour m'accompagner (${Math.round(SEANCES.envie.d / 60)} min)</button><p class="small mute" style="text-align:center">ou</p>` : ""}
+    <p class="small mute">Lance le minuteur. Toutes les 2 minutes, note où en est ton envie : tu vas la voir redescendre.</p>
     <div class="big" id="ut">10:00</div><canvas id="uch" width="600" height="130" style="height:100px"></canvas>
     <div id="uask" class="hidden"><label>Mon envie maintenant : <b id="uav">5</b> / 10</label><input type="range" min="0" max="10" value="5" id="ua" oninput="$('#uav').textContent=this.value"><button class="btn alt" onclick="urgePt()">Noter</button></div>
     <button class="btn" id="ugo" onclick="urgeGo()">▶ Lancer les 10 minutes</button></div>
@@ -727,7 +793,8 @@ function openSOS() {
   ${S.theme === "miku" ? `<div class="mascot"><img src="miku-douce.png" alt=""><div class="say">On y va ensemble, doucement. Tu n'es pas seule 💙</div></div>` : ""}
   <p>Tu traverses un moment très dur. <b>Ça va redescendre.</b> On y va une chose à la fois.</p>
   <button class="btn warm" onclick="closeSOS();goUrge()">🌊 J'ai envie de me faire du mal</button>
-  <div class="card"><h3>1. Respire avec la bulle</h3><div id="sosb"></div></div>
+  <div class="card"><h3>1. Respire avec la bulle</h3><div id="sosb"></div>
+    ${SEANCES.envie ? `<button class="btn soft" onclick="closeSOS();openSess('envie',()=>{go('home');openSOS()})">🎧 Ou une voix pour m'accompagner (${Math.round(SEANCES.envie.d / 60)} min)</button>` : ""}</div>
   <div class="card"><h3>2. Fais redescendre vite</h3>
     <button class="btn" onclick="sosT('🧊 Eau très froide sur le visage, ou un glaçon dans la main. Respire lentement.',30)">🧊 Le froid, 30 s</button>
     <button class="btn soft" onclick="sosT('🏃 Saute, cours sur place, à fond. Laisse sortir l\\'énergie.',60)">🏃 Bouger fort, 1 min</button>

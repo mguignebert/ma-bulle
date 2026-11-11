@@ -95,6 +95,7 @@ details.card summary::after{content:" ›";color:var(--mute)} details.card[open]
 </nav>
 <div id="sos" class="sos-wrap hidden"></div>
 <div id="lock" class="lock hidden"></div>
+<script src="voix/voix.js"></script>
 
 <script>
 /* Ma Bulle — trousse émotionnelle et parcours pour apprendre à gérer ses émotions.
@@ -110,16 +111,26 @@ const today = () => ymd(new Date());
 const fmtD = d => new Date(d + "T12:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
 const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 
-// voix qui guide les exercices : synthèse vocale du téléphone, rien n'est envoyé sur Internet
-const VOICE = { ok: "speechSynthesis" in window, v: null };
-function pickVoice() { if (!VOICE.ok) return; const vs = speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang));
-  VOICE.v = vs.find(v => /fr-FR/i.test(v.lang) && /female|femme|amelie|amélie|audrey|marie|julie|denise|hortense|eloise|google/i.test(v.name)) || vs.find(v => /fr-FR/i.test(v.lang)) || vs[0] || null; }
-if (VOICE.ok) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {} }
-function say(t) {
-  if (!VOICE.ok || S.voice === false || !t) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/…/g, ".")); u.lang = "fr-FR"; if (VOICE.v) u.voice = VOICE.v; u.rate = .85; u.pitch = 1.05; speechSynthesis.speak(u); } catch (e) {}
+// voix qui guide les exercices : phrases enregistrées à l'avance (voix féminine douce, fichiers dans voix/,
+// marchent hors connexion). Si une phrase n'a pas d'enregistrement, on se rabat sur une voix féminine du téléphone.
+const VA = typeof Audio !== "undefined" ? new Audio() : null;
+const SYN = "speechSynthesis" in window;
+const VOICE = { ok: !!VA || SYN, v: null };
+const MALE = /thomas|paul|henri|nicolas|claude|daniel|antoine|jean|thierry|fabrice|gerard|gérard|remy|rémy|male|homme/i;
+function pickVoice() { if (!SYN) return; const vs = speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang) && !MALE.test(v.name));
+  VOICE.v = vs.find(v => /audrey|amelie|amélie|marie|aurelie|aurélie|vivienne|denise|julie|hortense|female|femme/i.test(v.name)) || vs.find(v => /fr-FR/i.test(v.lang)) || vs[0] || null; }
+if (SYN) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {} }
+function synth(t) {
+  if (!SYN) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/…/g, ".")); u.lang = "fr-FR"; if (VOICE.v) u.voice = VOICE.v; u.rate = .85; u.pitch = 1.1; speechSynthesis.speak(u); } catch (e) {}
 }
-const hush = () => { try { VOICE.ok && speechSynthesis.cancel(); } catch (e) {} };
+function say(t) {
+  if (S.voice === false || !t) return;
+  const f = typeof VOIX !== "undefined" && VOIX[String(t).trim()];
+  if (f && VA) { try { if (SYN) speechSynthesis.cancel(); VA.pause(); VA.src = f; const p = VA.play(); if (p && p.catch) p.catch(() => synth(t)); return; } catch (e) {} }
+  synth(t);
+}
+const hush = () => { try { if (VA) VA.pause(); if (SYN) speechSynthesis.cancel(); } catch (e) {} };
 function voiceChip() { return VOICE.ok ? `<button class="chip ${S.voice !== false ? "on" : ""}" onclick="toggleVoice(this)">${S.voice !== false ? "🔊 Voix activée" : "🔇 Voix coupée"}</button>` : ""; }
 function toggleVoice(b) { S.voice = S.voice === false; save(); if (S.voice === false) hush(); else say("Je suis là. Je te guide.");
   if (b) { b.classList.toggle("on", S.voice !== false); b.textContent = S.voice !== false ? "🔊 Voix activée" : "🔇 Voix coupée"; } }

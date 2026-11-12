@@ -59,5 +59,18 @@ const VOIX = {
 "Reviens au centre, et fais pareil de l'autre côté.": "voix/57.mp3",
 "Laisse ton dos s'enrouler vers l'avant, la tête lourde, les bras qui pendent.": "voix/58.mp3",
 "Remonte tout doucement, comme si tu empilais tes vertèbres une par une.": "voix/59.mp3",
-"Prends une grande inspiration, et souffle.": "voix/60.mp3"
+"Prends une grande inspiration, et souffle.": "voix/60.mp3",
+"Lève-toi, les pieds bien posés au sol, écartés comme tes épaules.": "voix/61.mp3",
+"Sens le sol sous tes pieds. Il te porte. Tu es stable.": "voix/62.mp3",
+"Redresse-toi doucement, comme si un fil tirait le haut de ta tête vers le ciel.": "voix/63.mp3",
+"Ouvre tes épaules vers l'arrière. Lève un peu le menton.": "voix/64.mp3",
+"Pose tes mains sur tes hanches, comme une héroïne qui regarde l'horizon.": "voix/65.mp3",
+"Inspire profondément par le nez. Laisse ta poitrine s'ouvrir.": "voix/66.mp3",
+"Et souffle lentement par la bouche.": "voix/67.mp3",
+"Encore une fois. Inspire la force.": "voix/68.mp3",
+"Et souffle le doute.": "voix/69.mp3",
+"Pense à ton personnage préféré. Imagine que tu enfiles sa force, comme un costume.": "voix/70.mp3",
+"Dis-toi dans ta tête : je suis prête. Je fais de mon mieux, et c'est assez.": "voix/71.mp3",
+"Garde cette posture encore quelques secondes. Respire tranquillement.": "voix/72.mp3",
+"Tu peux y aller. Ta force vient avec toi.": "voix/73.mp3"
 };

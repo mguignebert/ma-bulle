@@ -255,6 +255,8 @@ function render() {
   else if (view === "urge") { A.innerHTML = urgeView(); drawUrge(); }
   else if (view === "sessions") A.innerHTML = sessionsList();
   else if (view === "moves") A.innerHTML = movesList();
+  else if (view === "conf") A.innerHTML = confList();
+  else if (view === "confx") { A.innerHTML = confView(CONF[cur] ? cur : "qual"); mountConf(CONF[cur] ? cur : "qual"); }
   else if (view === "move") { A.innerHTML = moveView(); moveEx($("#mvbox"), MOVES[cur] ? cur : "shake"); }
   else if (view === "session") { A.innerHTML = sessionView(cur); mountSession(cur); }
   else if (view === "stress") { A.innerHTML = `<h1>Stress express ⚡</h1><p class="mute">Le soupir qui détend : <b>2 inspirations</b> par le nez (une grande, puis une petite pour remplir à fond), puis <b>une longue expiration</b> par la bouche. 1 minute suffit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""]); }
@@ -281,15 +283,16 @@ function home() {
   <div class="quick"><button class="btn soft" onclick="go('sessions')">🎧 Séances audio</button><button class="btn soft" onclick="openSess('sommeil')">🌙 S'endormir</button>
     <button class="btn alt" onclick="go('stress')">⚡ Stress express</button><button class="btn alt" onclick="go('breathe')">🌬️ Respirer</button>
     <button class="btn alt" onclick="go('journal','new')">✍️ Écrire</button><button class="btn alt" onclick="go('tools')">🧰 Mes outils</button></div>
+  <button class="btn soft" onclick="go('conf')">💎 Confiance en moi</button>
   ${defiCard()}
   ${dayCard()}`;
 }
 // message « nouveautés », affiché une fois, pour donner envie de réessayer
 function newsCard() {
-  if ((S.news || 0) >= 3) return "";
-  return `<div class="card" style="border-color:var(--acc)"><h3>✨ Nouveau : bouger pour aller mieux</h3>
-    <p class="small">🥊 Boxer dans un coussin, 🧱 pousser le mur, 🫨 secouer son corps, 💃 danser, 🚶‍♀️ marcher, 🧘 s'étirer : 6 exercices guidés par la voix.<br>💭 « Ce que je ressens » te propose maintenant le bon exercice selon ton émotion et sa force.</p>
-    <button class="btn" onclick="S.news=3;save();go('moves')">Découvrir</button><button class="btn alt" onclick="S.news=3;save();render()">Plus tard</button></div>`;
+  if ((S.news || 0) >= 4) return "";
+  return `<div class="card" style="border-color:var(--acc)"><h3>✨ Nouveau : confiance en moi 💎</h3>
+    <p class="small">💎 Mes qualités et leurs preuves, 💌 un coffre à trésors pour garder les gentillesses qu'on te dit, 🪜 l'échelle du courage pour oser pas à pas, 👾 ton critique intérieur, 🦸‍♀️ la posture de l'héroïne avant un moment stressant… 8 exercices rien que pour toi.</p>
+    <button class="btn" onclick="S.news=4;save();go('conf')">Découvrir</button><button class="btn alt" onclick="S.news=4;save();render()">Plus tard</button></div>`;
 }
 // ---------------------------------------------------------------- Miku, la mascotte (thème Miku)
 function mascot(m) {
@@ -420,7 +423,7 @@ const HELP = {
   colere: { nm: "de la colère", msg: "La colère, c'est une énergie énorme. Tu as le droit de la ressentir. On va la faire sortir de ton corps, sans te faire de mal.", acts: ["punch", "push", "cold", "wait"] },
   triste: { nm: "de la tristesse", msg: "C'est normal d'être triste, tu n'as pas à aller bien tout de suite. On va prendre soin de toi, doucement. Bouger un peu, même 10 minutes dehors, aide vraiment le moral.", acts: ["coh", "walk", "call", "write"] },
   vide: { nm: "du vide", msg: "Quand on se sent vide, le corps a besoin de sensations fortes mais sans danger pour se réveiller.", acts: ["cold", "shake", "dance", "box"] },
-  honte: { nm: "de la honte", msg: "La honte fait croire qu'on est nulle. Ce n'est pas vrai. Regardons ça avec la douceur que tu aurais pour ta meilleure amie.", acts: ["friend", "stretch", "coh", "write"] },
+  honte: { nm: "de la honte", msg: "La honte fait croire qu'on est nulle. Ce n'est pas vrai. Regardons ça avec la douceur que tu aurais pour ta meilleure amie.", acts: ["friend", "tres", "stretch", "coh", "write"] },
   bien: { nm: "", msg: "Ça fait plaisir 😊 Garde une trace de ce qui t'a fait du bien, ça t'aidera les jours plus durs.", acts: ["wins", "dance", "write"] },
 };
 // quels outils proposer : quand c'est très fort (8/10 et plus), le corps d'abord (froid, gros effort) ; puis l'émotion principale,
@@ -489,6 +492,120 @@ function movesList() {
   <p class="small mute">Rien ici ne demande de sauter. Bouger doit faire du bien : jamais pour te punir ou jusqu'à avoir mal.</p>`;
 }
 function moveView() { return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('moves')">‹ Bouger</button><div class="card" id="mvbox"></div>`; }
+
+// ---------------------------------------------------------------- confiance en moi
+// Idées tirées des TCC et de l'auto-compassion : qualités avec preuves, coffre à trésors, critique intérieur extériorisé,
+// exposition graduée (échelle du courage), « pas encore », comparaison sociale, affirmation de soi. Rien sur le physique.
+const cf = () => { S.conf = S.conf || {}; const c = S.conf; c.qual = c.qual || {}; c.tres = c.tres || []; c.lad = c.lad || { goal: "", steps: ["", "", "", "", ""], ok: [], note: "" }; c.ladN = c.ladN || 0; return c; };
+const QUALS = ["Créative", "Drôle", "Gentille", "Courageuse", "Loyale", "Patiente", "Curieuse", "Persévérante", "Débrouillarde", "À l'écoute", "Sensible", "Généreuse", "Minutieuse", "Imaginative", "Honnête", "Douée de mes mains", "Musicale", "Protectrice", "Sincère", "Déterminée", "Attentionnée", "Passionnée"];
+const CONF = {
+  qual: { ic: "💎", t: "Mes qualités (et leurs preuves)", d: "5 min", k: "qual",
+    why: "Quand on manque de confiance, on voit très bien ses défauts et presque plus ses qualités. Ce n'est pas que tu n'en as pas : ton cerveau a juste arrêté de les remarquer. Ici, tu choisis tes qualités et tu leur trouves une preuve, un vrai moment où tu les as montrées. Une qualité avec une preuve, c'est difficile à contredire, même un jour gris." },
+  tres: { ic: "💌", t: "Mon coffre à trésors", d: "2 min", k: "tres",
+    why: "Les jours où tu doutes de toi, ton cerveau oublie tout ce qui va bien. Ce coffre garde les preuves à ta place : les gentillesses qu'on t'a dites et ce dont tu es fière. Ajoutes-y un trésor dès qu'il arrive, et relis-le quand ça ne va pas." },
+  lad: { ic: "🪜", t: "L'échelle du courage", d: "à ton rythme", k: "lad",
+    why: "La confiance ne vient pas avant d'oser : elle vient APRÈS. Chaque fois que tu fais une chose qui te fait un peu peur, ton cerveau enregistre « j'en suis capable ». Le secret, c'est d'y aller marche par marche, en commençant par la plus facile, et de ne passer à la suivante que quand tu te sens prête." },
+  critic: { ic: "👾", t: "Mon critique intérieur", d: "5 min", k: "form",
+    why: "Tout le monde a dans la tête une petite voix qui critique : « t'es nulle », « tu vas te ridiculiser ». Elle croit te protéger, mais elle exagère énormément. Lui donner un nom et une tête, comme à un méchant d'anime, aide à voir que ce n'est pas TOI : c'est juste une voix, et tu as le droit de lui répondre.",
+    q: ["Si mon critique était un personnage, il s'appellerait… et il ressemblerait à… :", "Ce qu'il me dit le plus souvent :", "Quand est-ce qu'il parle le plus fort ? (moments, situations) :", "De quoi il essaie de me protéger, au fond ? (la honte, être rejetée, rater…) :", "Ce que mon héroïne, ou ma meilleure amie, lui répondrait :", "Ma réponse à moi, la prochaine fois qu'il parle :"] },
+  pose: { ic: "🦸‍♀️", t: "La posture de l'héroïne", d: "2 min", k: "guide",
+    why: "Le corps et la confiance sont reliés : quand on se tient comme quelqu'un de solide, on se sent un peu plus solide. C'est un peu ce qui se passe quand tu enfiles ton cosplay et que tu deviens ton personnage. À faire juste avant un oral, un rendez-vous, une convention…",
+    steps: [["Lève-toi, les pieds bien posés au sol, écartés comme tes épaules.", 6],
+      ["Sens le sol sous tes pieds. Il te porte. Tu es stable.", 7],
+      ["Redresse-toi doucement, comme si un fil tirait le haut de ta tête vers le ciel.", 7],
+      ["Ouvre tes épaules vers l'arrière. Lève un peu le menton.", 7],
+      ["Pose tes mains sur tes hanches, comme une héroïne qui regarde l'horizon.", 8],
+      ["Inspire profondément par le nez. Laisse ta poitrine s'ouvrir.", 6],
+      ["Et souffle lentement par la bouche.", 7],
+      ["Encore une fois. Inspire la force.", 6],
+      ["Et souffle le doute.", 7],
+      ["Pense à ton personnage préféré. Imagine que tu enfiles sa force, comme un costume.", 10],
+      ["Dis-toi dans ta tête : je suis prête. Je fais de mon mieux, et c'est assez.", 9],
+      ["Garde cette posture encore quelques secondes. Respire tranquillement.", 10],
+      ["Tu peux y aller. Ta force vient avec toi.", 6]] },
+  encore: { ic: "🌱", t: "Le pouvoir du « pas encore »", d: "5 min", k: "form",
+    why: "Rater quelque chose ne veut pas dire que tu es nulle : ça veut dire que tu es en train d'apprendre. Les gens qui ont confiance en eux ne réussissent pas tout, ils savent juste qu'une erreur est une étape. Ajouter « pas encore » à la fin d'une phrase change tout : « je n'y arrive pas »… pas encore.",
+    q: ["Ce que j'ai raté, ou ce qui s'est mal passé :", "Ce que je me suis dit sur moi après :", "Ce que ça m'apprend (ce que je ferais autrement la prochaine fois) :", "Ma phrase « pas encore » (ex. « Je ne sais pas encore coiffer une perruque, mais j'apprends ») :", "Une chose que je sais faire aujourd'hui et que je ne savais pas faire il y a un an :"] },
+  compare: { ic: "🪞", t: "Arrêter de me comparer", d: "5 min", k: "form",
+    why: "Sur les réseaux, on compare nos coulisses aux meilleurs moments des autres : leurs photos sont choisies, retouchées, filtrées, et on ne voit jamais celles qu'ils ont ratées. Ce n'est pas un match juste. La seule comparaison qui a du sens, c'est avec toi-même, avant.",
+    q: ["À qui je me compare souvent (ou sur quoi) :", "Ce que je vois de cette personne :", "Ce que je ne vois PAS (ses doutes, ses ratés, les photos supprimées) :", "Comment je me sens après avoir regardé :", "Moi il y a un an, et moi aujourd'hui : ce qui a changé ou progressé :", "Un compte que je pourrais masquer, ou un moment d'écran que je pourrais remplacer :"] },
+  oser: { ic: "🗣️", t: "Oser dire ce que je pense", d: "5 min", k: "form",
+    why: "Dire ce qu'on ressent ou dire non, ça s'apprend, comme une technique. Le truc : parler de toi (« je me sens… ») plutôt qu'accuser (« tu es… »). C'est plus facile à dire, et les autres l'entendent beaucoup mieux. Tu as le droit d'avoir un avis et des limites.",
+    say: ["Non merci, ça ne me dit pas.", "Non, ça ne me va pas.", "J'ai besoin d'y réfléchir, je te redis.", "Quand tu dis ça, ça me blesse.", "Je ne suis pas d'accord, et c'est OK qu'on pense différemment.", "Là, j'ai besoin d'être un peu seule. On en reparle plus tard ?"],
+    q: ["La situation (avec qui, à propos de quoi) :", "Quand… (juste les faits, sans juger) :", "… je me sens… :", "… et j'aimerais, ou j'ai besoin que… :", "Ma phrase complète, à dire calmement :"] },
+};
+// un trésor ou une qualité tiré au hasard, pour se le rappeler
+function confPick() { const c = cf(), L = c.tres.map(x => (x.k === "c" ? "💬 « " + x.t + " »" + (x.who ? " — " + x.who : "") : "⭐ " + x.t))
+  .concat(Object.entries(c.qual).filter(([, p]) => p).map(([q, p]) => "💎 " + q + " : " + p)); return L.length ? L[Math.floor(Math.random() * L.length)] : ""; }
+function confList() {
+  const p = confPick(), c = cf();
+  return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('tools')">‹ Mes outils</button><h1>Confiance en moi 💎</h1>
+  <p class="mute">La confiance en soi, ce n'est pas un don : ça se construit, petit à petit, comme un cosplay. Choisis un exercice, il n'y a pas d'ordre.</p>
+  ${p ? `<div class="card" style="border-color:var(--acc)"><h3>✨ Petit rappel</h3><p>${esc(p)}</p><button class="btn alt" onclick="render()">🎲 Un autre</button></div>` : ""}
+  ${Object.entries(CONF).map(([id, m]) => `<div class="step" onclick="go('confx','${id}')"><div class="n">${m.ic}</div><div class="grow"><b>${m.t}</b> <span class="small mute">· ${m.d}</span>${id === "lad" && c.ladN ? `<br><span class="small mute">🏅 ${c.ladN} échelle${c.ladN > 1 ? "s" : ""} terminée${c.ladN > 1 ? "s" : ""}</span>` : ""}</div><span class="mute">›</span></div>`).join("")}
+  <p class="small mute">Ici, on travaille sur ce que tu fais et ce que tu es, jamais sur ton apparence. Tu peux en parler avec ton psy si tu veux aller plus loin.</p>`;
+}
+function confView(id) { const m = CONF[id];
+  return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('conf')">‹ Confiance en moi</button><h1>${m.ic} ${m.t}</h1>
+  <div class="card"><h3>💡 Pourquoi ça aide</h3><p>${m.why}</p></div><div class="card" id="cfx"></div>`; }
+function mountConf(id) {
+  const m = CONF[id], b = $("#cfx"), c = cf();
+  if (m.k === "guide") { guide(b, m.steps); return; }
+  if (m.k === "form") {
+    const A = S.ans["c_" + id] = S.ans["c_" + id] || {};
+    b.innerHTML = (m.say ? `<h3>💬 Des phrases toutes prêtes</h3><div class="chips">${m.say.map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div><h3 style="margin-top:14px">✍️ Prépare la tienne</h3>` : `<h3>✍️ À toi</h3>`)
+      + m.q.map((q, k) => `<label>${esc(q)}</label><textarea data-k="${k}">${esc(A[k] || "")}</textarea>`).join("") + `<button class="btn soft" id="csv">Garder dans mon journal</button><p class="small mute">C'est enregistré tout seul, seulement sur ton téléphone.</p>`;
+    b.querySelectorAll("textarea").forEach(t => t.oninput = () => { A[t.dataset.k] = t.value; save(); });
+    $("#csv").onclick = () => { S.journal.unshift({ d: today(), kind: "note", emo: m.ic + " " + m.t, n: "", sit: "", txt: m.q.map((q, k) => A[k] ? q + "\n" + A[k] : "").filter(Boolean).join("\n\n") }); save(); toast("Gardé 📔"); };
+    return;
+  }
+  if (m.k === "qual") {
+    const opts = [...new Set([...QUALS, ...Object.keys(c.qual)])], sel = Object.keys(c.qual);
+    b.innerHTML = `<h3>1. Mes qualités</h3><p class="small mute">Touche celles que tu as, même « un peu » ou « parfois », ça compte.</p>
+      <div class="chips">${opts.map(o => `<button class="chip ${o in c.qual ? "on" : ""}" data-q="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+      <div class="row"><input type="text" id="cqa" placeholder="Ajouter une qualité…"><button class="btn" style="width:auto;margin:6px 0 0" id="cqb">+</button></div>
+      ${sel.length ? `<h3 style="margin-top:14px">2. Leurs preuves</h3><p class="small mute">Pour chacune, un vrai moment où tu l'as montrée. Même petit.</p>
+      ${sel.map(q => `<label>💎 <b>${esc(q)}</b> : une fois où je l'ai montré…</label><input type="text" data-p="${esc(q)}" value="${esc(c.qual[q])}">`).join("")}` : ""}
+      <p class="small mute">Pas d'idée ? Demande à quelqu'un qui t'aime quelle qualité il voit chez toi. La réponse va peut-être te surprendre.</p>`;
+    b.querySelectorAll(".chip").forEach(x => x.onclick = () => { const q = x.dataset.q; if (q in c.qual) delete c.qual[q]; else c.qual[q] = ""; save(); vib(15); mountConf(id); });
+    $("#cqb").onclick = () => { const v = $("#cqa").value.trim(); if (!v) return; c.qual[v] = c.qual[v] || ""; save(); mountConf(id); };
+    b.querySelectorAll("input[data-p]").forEach(x => x.oninput = () => { c.qual[x.dataset.p] = x.value; save(); });
+    return;
+  }
+  if (m.k === "tres") {
+    b.innerHTML = `<h3>Ajouter un trésor</h3><div class="chips"><button class="chip on" data-t="c">💬 On m'a dit…</button><button class="chip" data-t="f">⭐ Je suis fière de…</button></div>
+      <textarea id="ctt" placeholder="ex. « Ton cosplay est trop réussi » ou « J'ai fini ma perruque toute seule »"></textarea>
+      <input type="text" id="ctw" placeholder="Qui me l'a dit ? (facultatif)"><button class="btn" id="cta">Ranger dans mon coffre</button>
+      ${c.tres.length ? `<h3 style="margin-top:14px">Mon coffre · ${c.tres.length} trésor${c.tres.length > 1 ? "s" : ""}</h3>${c.tres.map((x, i) => `<div class="entry"><div class="row"><div class="grow">${x.k === "c" ? "💬 « " + esc(x.t) + " »" + (x.who ? ` <span class="small mute">— ${esc(x.who)}</span>` : "") : "⭐ " + esc(x.t)}<br><span class="small mute">${fmtD(x.d)}</span></div><button class="chip" data-del="${i}">✕</button></div></div>`).join("")}`
+        : `<p class="small mute">Ton coffre est encore vide. Pense à une gentillesse qu'on t'a dite cette semaine, ou à un truc que tu as réussi.</p>`}`;
+    let k = "c";
+    b.querySelectorAll("[data-t]").forEach(x => x.onclick = () => { k = x.dataset.t; b.querySelectorAll("[data-t]").forEach(y => y.classList.toggle("on", y === x)); $("#ctw").classList.toggle("hidden", k !== "c"); });
+    $("#cta").onclick = () => { const t = $("#ctt").value.trim(); if (!t) return; c.tres.unshift({ k, t, who: k === "c" ? $("#ctw").value.trim() : "", d: today() }); save(); vib([20, 40, 20]); toast("Rangé dans ton coffre 💌"); mountConf(id); };
+    b.querySelectorAll("[data-del]").forEach(x => x.onclick = () => { if (!confirm("Retirer ce trésor ?")) return; c.tres.splice(+x.dataset.del, 1); save(); mountConf(id); });
+    return;
+  }
+  if (m.k === "lad") {
+    const L = c.lad, nOk = L.ok.filter(Boolean).length;
+    b.innerHTML = `<label>Ce que j'aimerais réussir à oser</label><input type="text" id="clg" value="${esc(L.goal)}" placeholder="ex. parler en classe">
+      <div class="chips">${["Parler en classe", "Aller à une convention en cosplay", "Dire ce que je pense à une amie", "Me faire une nouvelle amie", "Montrer mes créations"].map(x => `<button class="chip" data-g="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <h3 style="margin-top:14px">Mes marches, de la plus facile à la plus dure</h3>
+      <p class="small mute">Ex. pour une convention : regarder des photos → y aller sans costume avec une amie → y aller avec un petit accessoire → un cosplay simple → mon cosplay de rêve.</p>
+      ${L.steps.map((s, i) => `<div class="row"><button class="chip ${L.ok[i] ? "on" : ""}" data-ok="${i}" style="flex:none">${L.ok[i] ? "✓" : i + 1}</button><input type="text" class="grow" data-s="${i}" value="${esc(s)}" placeholder="${i === 0 ? "La plus facile" : i === 4 ? "Mon objectif" : "Marche " + (i + 1)}"></div>`).join("")}
+      <div class="bar2" style="margin-top:12px"><i style="width:${nOk * 20}%"></i></div>
+      <label>Ce que j'ai remarqué en montant (souvent : c'était moins terrible que prévu)</label><textarea id="cln">${esc(L.note)}</textarea>
+      ${nOk === 5 ? `<div class="card" style="border-color:var(--acc)"><h3>🏅 Échelle terminée !</h3><p>Tu as fait quelque chose qui te faisait peur. Ça, personne ne pourra te l'enlever.</p><button class="btn" id="clnew">Ranger dans mon coffre et commencer une nouvelle échelle</button></div>` : ""}`;
+    $("#clg").oninput = e => { L.goal = e.target.value; save(); };
+    b.querySelectorAll("[data-g]").forEach(x => x.onclick = () => { L.goal = x.dataset.g; save(); $("#clg").value = L.goal; });
+    b.querySelectorAll("input[data-s]").forEach(x => x.oninput = () => { L.steps[x.dataset.s] = x.value; save(); });
+    $("#cln").oninput = e => { L.note = e.target.value; save(); };
+    b.querySelectorAll("[data-ok]").forEach(x => x.onclick = () => { const i = +x.dataset.ok;
+      if (!L.ok[i] && !L.steps[i].trim()) { toast("Écris d'abord cette marche"); return; }
+      L.ok[i] = L.ok[i] ? "" : today(); save();
+      if (L.ok[i]) { vib([20, 40, 20]); toast(i === 4 ? "🏅 Tu l'as fait !" : "Bravo 💪 Ton cerveau vient d'apprendre que tu en es capable."); }
+      mountConf(id); });
+    const nw = $("#clnew"); if (nw) nw.onclick = () => { c.tres.unshift({ k: "f", t: "J'ai osé : " + (L.goal || L.steps[4]), who: "", d: today() }); c.ladN++; c.lad = { goal: "", steps: ["", "", "", "", ""], ok: [], note: "" }; save(); toast("Rangé dans ton coffre 💌"); mountConf(id); };
+  }
+}
 const ACTS = {
   sigh: ["⚡ Le soupir qui détend (1 min)", b => breath(b, [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""])],
   square: ["⬜ Respiration carrée (2 min)", b => breath(b, [4, 4, 4, 4], 2)],
@@ -504,6 +621,9 @@ const ACTS = {
   write: ["✍️ Écrire ce que je ressens", () => go("journal", "new")],
   friend: ["💜 La voix de la meilleure amie", () => go("step", 16)],
   wins: ["🏆 Noter mes victoires", () => go("step", 18)],
+  tres: ["💌 Relire mon coffre à trésors", b => { const c = cf(), L = [...new Set([confPick(), confPick(), confPick()].filter(Boolean))];
+    b.innerHTML = (L.length ? L.map(x => `<div class="entry">${esc(x)}</div>`).join("") + `<p class="small mute">Ça aussi, c'est toi. Même quand tu ne le sens pas.</p>`
+      : `<p class="small mute">Ton coffre est encore vide. Au calme, ajoutes-y les gentillesses qu'on t'a dites et ce dont tu es fière.</p>`) + `<button class="btn alt" onclick="go('confx','tres')">Ouvrir mon coffre</button>`; }],
   urge: ["🌊 Surfer sur la vague", () => goUrge()],
   box: ["🧰 Ma boîte de secours", b => { b.innerHTML = `<div class="chips">${(S.box.length ? S.box : ["Écouter ma playlist", "Prendre une douche", "Danser", "Chanter fort"]).map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div><p class="small mute">Choisis-en une et fais-la maintenant.</p>`; }],
 };
@@ -594,7 +714,8 @@ function sessEnd(id) {
 
 function xp() { return Object.keys(S.done).length * 20 + Object.values(S.defi).filter(Boolean).length * 10 + Object.keys(S.mood).length * 3
   + Object.values(S.sess || {}).reduce((a, b) => a + b, 0) * 8
-  + S.journal.filter(e => e.n2 !== undefined && e.n2 < e.n).length * 15 + Object.values(S.wins).filter(w => w.some(Boolean)).length * 5; }
+  + S.journal.filter(e => e.n2 !== undefined && e.n2 < e.n).length * 15 + Object.values(S.wins).filter(w => w.some(Boolean)).length * 5
+  + (S.conf ? Object.values(S.conf.qual || {}).filter(Boolean).length * 5 + (S.conf.tres || []).length * 3 + ((S.conf.lad || {}).ok || []).filter(Boolean).length * 15 + (S.conf.ladN || 0) * 30 : 0); }
 function lvlInfo() { const x = xp(); let i = 0; while (i + 1 < LVL.length && x >= LVL[i + 1][0]) i++;
   const a = LVL[i][0], b = LVL[i + 1] ? LVL[i + 1][0] : a + 1; return { x, i, name: LVL[i][1], next: LVL[i + 1] ? LVL[i + 1][1] : null, pct: LVL[i + 1] ? Math.round((x - a) / (b - a) * 100) : 100 }; }
 function lvlCard() { const L = lvlInfo();
@@ -638,7 +759,7 @@ const TOOLS = [
   { ic: "🌊", t: "Envie de me faire du mal", go: () => goUrge() },
   { ic: "🎧", t: "Séances audio guidées", go: () => go("sessions") }, { ic: "🌙", t: "S'endormir", go: () => openSess("sommeil") },
   { ic: "⚡", t: "Stress express", go: () => go("stress") }, { ic: "🌬️", t: "Respirer 3 min", go: () => go("breathe") },
-  { ic: "🏆", t: "Mes victoires", go: () => go("step", 18) }, { ic: "👀", t: "5-4-3-2-1", go: () => go("step", 12) }, { ic: "🧊", t: "Le froid", go: () => go("step", 10) }, { ic: "🏃‍♀️", t: "Bouger pour aller mieux", go: () => go("moves") },
+  { ic: "🏆", t: "Mes victoires", go: () => go("step", 18) }, { ic: "👀", t: "5-4-3-2-1", go: () => go("step", 12) }, { ic: "🧊", t: "Le froid", go: () => go("step", 10) }, { ic: "🏃‍♀️", t: "Bouger pour aller mieux", go: () => go("moves") }, { ic: "💎", t: "Confiance en moi", go: () => go("conf") },
   { ic: "🎭", t: "Mon personnage", id: "hero" }, { ic: "✋", t: "STOP", id: "stop" }, { ic: "🔄", t: "L'action opposée", id: "opp" }, { ic: "🔍", t: "Vérifier les faits", id: "facts" },
   { ic: "🏝️", t: "Mon endroit calme", go: () => go("step", 8) }, { ic: "🧶", t: "Démêler une pensée", go: () => go("step", 15) }, { ic: "💜", t: "Voix de la meilleure amie", go: () => go("step", 16) },
 ];

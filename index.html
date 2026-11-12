@@ -170,8 +170,8 @@ const STEPS = [
     ex: { k: "timer", sec: 600, txt: "Lance le minuteur et fais autre chose en attendant : respire, bouge, écoute une musique, parle à quelqu'un. À la fin, regarde où tu en es sur 10." } },
   { m: 2, t: "Le froid qui calme", why: "Le froid sur le visage (eau très froide, glaçon dans la main) ralentit le cœur en quelques secondes : c'est un réflexe du corps. Un des moyens les plus rapides de faire redescendre une crise.",
     ex: { k: "timer", sec: 30, txt: "Passe de l'eau très froide sur ton visage, ou tiens un glaçon dans ta main, pendant 30 secondes. Respire lentement en même temps." } },
-  { m: 2, t: "Bouger fort, 1 minute", why: "Une émotion très forte remplit le corps d'énergie. La dépenser vite (sauter, courir sur place, faire des pompes) la fait retomber.",
-    ex: { k: "timer", sec: 60, txt: "Saute sur place, cours sur place ou fais des montées de genoux à fond pendant 1 minute. Puis respire lentement." } },
+  { m: 2, t: "Bouger fort, 1 minute", why: "Une émotion très forte remplit le corps d'énergie. La dépenser vite (boxer dans un coussin, pousser un mur de toutes ses forces) la fait retomber. Pas besoin de sauter.",
+    ex: { k: "timer", sec: 60, txt: "Boxe dans un coussin, pousse un mur de toutes tes forces ou fais des pompes contre le mur, à fond, pendant 1 minute. Puis respire lentement." } },
   { m: 2, t: "5-4-3-2-1 : revenir ici", why: "Quand l'angoisse emporte tout, nommer ce qui est autour de soi ramène l'esprit dans le présent, là où tu es en sécurité.",
     ex: { k: "ground" } },
   { m: 2, t: "Ma boîte de secours", why: "En pleine crise, on n'arrive pas à réfléchir. Choisis maintenant, au calme, ce qui t'aide : ta liste sera dans le bouton SOS.",
@@ -254,6 +254,8 @@ function render() {
   else if (view === "now") { A.innerHTML = nowView(); mountNow(); }
   else if (view === "urge") { A.innerHTML = urgeView(); drawUrge(); }
   else if (view === "sessions") A.innerHTML = sessionsList();
+  else if (view === "moves") A.innerHTML = movesList();
+  else if (view === "move") { A.innerHTML = moveView(); moveEx($("#mvbox"), MOVES[cur] ? cur : "shake"); }
   else if (view === "session") { A.innerHTML = sessionView(cur); mountSession(cur); }
   else if (view === "stress") { A.innerHTML = `<h1>Stress express ⚡</h1><p class="mute">Le soupir qui détend : <b>2 inspirations</b> par le nez (une grande, puis une petite pour remplir à fond), puis <b>une longue expiration</b> par la bouche. 1 minute suffit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""]); }
   else if (view === "breathe") { A.innerHTML = `<h1>Respirer</h1><p class="mute">Suis la bulle. Inspire quand elle grossit, expire quand elle rétrécit.</p><div class="card" id="ex"></div><button class="btn alt" onclick="go('home')">Retour</button>`; breath($("#ex"), [5, 0, 5, 0], 3); }
@@ -284,10 +286,10 @@ function home() {
 }
 // message « nouveautés », affiché une fois, pour donner envie de réessayer
 function newsCard() {
-  if ((S.news || 0) >= 2) return "";
-  return `<div class="card" style="border-color:var(--acc)"><h3>✨ Ma Bulle s'est améliorée</h3>
-    <p class="small">🎧 Une voix douce te guide dans les relaxations : tu peux fermer les yeux.<br>🫧 Un accueil plus simple.<br>🆘 Plus d'aide dans le SOS pour les moments les plus durs, et la possibilité d'écrire au lieu de parler.<br>⏰ Un rappel du soir et 💾 une sauvegarde (dans « Moi »).</p>
-    <button class="btn alt" onclick="S.news=2;save();render()">Super, j'ai vu</button></div>`;
+  if ((S.news || 0) >= 3) return "";
+  return `<div class="card" style="border-color:var(--acc)"><h3>✨ Nouveau : bouger pour aller mieux</h3>
+    <p class="small">🥊 Boxer dans un coussin, 🧱 pousser le mur, 🫨 secouer son corps, 💃 danser, 🚶‍♀️ marcher, 🧘 s'étirer : 6 exercices guidés par la voix.<br>💭 « Ce que je ressens » te propose maintenant le bon exercice selon ton émotion et sa force.</p>
+    <button class="btn" onclick="S.news=3;save();go('moves')">Découvrir</button><button class="btn alt" onclick="S.news=3;save();render()">Plus tard</button></div>`;
 }
 // ---------------------------------------------------------------- Miku, la mascotte (thème Miku)
 function mascot(m) {
@@ -414,19 +416,88 @@ function plan(box) {
 const FAM = { "Angoissée": "stress", "Stressée": "stress", "Nerveuse": "stress", "Perdue": "stress", "En colère": "colere", "Frustrée": "colere", "Agacée": "colere", "Jalouse": "colere",
   "Triste": "triste", "Seule": "triste", "Déçue": "triste", "Blessée": "triste", "Rejetée": "triste", "Épuisée": "triste", "Vide": "vide", "Honteuse": "honte" };
 const HELP = {
-  stress: { msg: "Le stress, c'est ton corps qui croit qu'il y a un danger. On va lui montrer que tu es en sécurité, en ralentissant ta respiration.", acts: ["sigh", "square", "ground"] },
-  colere: { msg: "La colère, c'est une énergie énorme. Tu as le droit de la ressentir. On va la faire sortir de ton corps, sans te faire de mal.", acts: ["move", "cold", "wait"] },
-  triste: { msg: "C'est normal d'être triste, tu n'as pas à aller bien tout de suite. On va prendre soin de toi, doucement.", acts: ["coh", "call", "write"] },
-  vide: { msg: "Quand on se sent vide, le corps a besoin de sensations fortes mais sans danger pour se réveiller.", acts: ["cold", "move", "box"] },
-  honte: { msg: "La honte fait croire qu'on est nulle. Ce n'est pas vrai. Regardons ça avec la douceur que tu aurais pour ta meilleure amie.", acts: ["friend", "coh", "write"] },
-  bien: { msg: "Ça fait plaisir 😊 Garde une trace de ce qui t'a fait du bien, ça t'aidera les jours plus durs.", acts: ["wins", "write"] },
+  stress: { nm: "du stress", msg: "Le stress, c'est ton corps qui croit qu'il y a un danger. On va lui montrer que tu es en sécurité : ralentir ton souffle, ou faire sortir la tension en secouant ton corps.", acts: ["sigh", "shake", "square", "ground"] },
+  colere: { nm: "de la colère", msg: "La colère, c'est une énergie énorme. Tu as le droit de la ressentir. On va la faire sortir de ton corps, sans te faire de mal.", acts: ["punch", "push", "cold", "wait"] },
+  triste: { nm: "de la tristesse", msg: "C'est normal d'être triste, tu n'as pas à aller bien tout de suite. On va prendre soin de toi, doucement. Bouger un peu, même 10 minutes dehors, aide vraiment le moral.", acts: ["coh", "walk", "call", "write"] },
+  vide: { nm: "du vide", msg: "Quand on se sent vide, le corps a besoin de sensations fortes mais sans danger pour se réveiller.", acts: ["cold", "shake", "dance", "box"] },
+  honte: { nm: "de la honte", msg: "La honte fait croire qu'on est nulle. Ce n'est pas vrai. Regardons ça avec la douceur que tu aurais pour ta meilleure amie.", acts: ["friend", "stretch", "coh", "write"] },
+  bien: { nm: "", msg: "Ça fait plaisir 😊 Garde une trace de ce qui t'a fait du bien, ça t'aidera les jours plus durs.", acts: ["wins", "dance", "write"] },
 };
+// quels outils proposer : quand c'est très fort (8/10 et plus), le corps d'abord (froid, gros effort) ; puis l'émotion principale,
+// puis le meilleur outil de chaque autre émotion cochée
+function nowActs() {
+  const hi = NOW.n >= 8 && NOW.fam !== "bien", P = HELP[NOW.fam].acts;
+  const L = (hi ? ["cold", "push"] : []).concat(P.slice(0, 2), (NOW.fams || []).filter(f => f !== NOW.fam && f !== "bien").map(f => HELP[f].acts[0]), P.slice(2));
+  return [...new Set(L)].slice(0, 5);
+}
+
+// ---------------------------------------------------------------- bouger pour aller mieux
+// Aucun saut ni course sur place : rien qui force sur les mollets.
+const MOVES = {
+  push: { ic: "🧱", t: "Pousser le mur", d: "1 min", when: "Colère, crise très forte", why: "Un effort très intense, même court, vide d'un coup le trop-plein d'énergie que donne une émotion forte. Ensuite le cœur ralentit et l'émotion retombe.", k: "guide", steps: [
+    ["Mets-toi face à un mur, les deux mains posées dessus, à hauteur des épaules.", 6],
+    ["Pousse le mur de toutes tes forces, comme si tu voulais le faire reculer.", 10],
+    ["Encore plus fort. Mets toute ta colère dans tes bras.", 10],
+    ["Relâche. Secoue les mains.", 6],
+    ["Encore une fois. Pousse à fond.", 12],
+    ["Et relâche tout. Souffle longtemps par la bouche.", 8],
+    ["Une dernière fois, de toutes tes forces.", 12],
+    ["Relâche. Respire lentement et sens ton cœur ralentir.", 8]] },
+  punch: { ic: "🥊", t: "Boxer dans un coussin", d: "1 min", when: "Colère, frustration", why: "La colère donne envie de frapper. La faire sortir sur un coussin, c'est la laisser passer sans faire de mal à personne, ni à toi.", k: "guide", steps: [
+    ["Prends un coussin ou un oreiller et pose-le devant toi, sur ton lit.", 6],
+    ["Frappe le coussin avec tes poings, fort, aussi vite que tu veux.", 15],
+    ["Tu peux crier dans le coussin si ça t'aide. Ici, tu ne fais de mal à personne.", 15],
+    ["Continue. Laisse sortir tout ce qui est coincé.", 15],
+    ["Ralentis. Des coups plus lents, plus lourds.", 8],
+    ["Arrête-toi. Pose tes mains sur ton ventre et souffle longtemps.", 8]] },
+  shake: { ic: "🫨", t: "Secouer tout son corps", d: "1 min", when: "Stress, nervosité, vide", why: "Les animaux tremblent après une grosse peur : c'est leur façon d'évacuer le stress. On peut faire pareil, et ça marche très bien.", k: "guide", steps: [
+    ["Debout, les pieds bien à plat. Laisse tes bras pendre.", 5],
+    ["Secoue tes mains, comme pour les sécher.", 8],
+    ["Secoue tes bras, tes épaules, de plus en plus fort.", 10],
+    ["Laisse tout ton corps trembler : ta tête, ton ventre, tes hanches. Les pieds restent au sol.", 15],
+    ["Comme un chien qui sort de l'eau. Si ça te fait rire, c'est très bien.", 12],
+    ["Ralentis petit à petit.", 6],
+    ["Arrête-toi. Sens les picotements dans ton corps. L'énergie est retombée.", 8]] },
+  dance: { ic: "💃", t: "Danser sur une chanson", d: "3 min", when: "Vide, ennui, ou pour fêter un bon moment", why: "Danser sur une musique qu'on adore libère des hormones du bien-être en quelques minutes. Et Miku, c'est fait pour danser ♪", k: "timer", sec: 180,
+    txt: "Mets une chanson que tu adores (une de Miku par exemple) et monte le son. Danse comme si personne ne te regardait : les bras, les épaules, la tête. Tu peux rester sur place, pas besoin de sauter." },
+  walk: { ic: "🚶‍♀️", t: "Marcher 10 minutes", d: "10 min", when: "Tristesse, pensées qui tournent", why: "Une marche de 10 minutes, surtout dehors, est un des moyens les plus sûrs d'améliorer le moral. Le mouvement régulier calme aussi les pensées qui tournent en rond.", k: "timer", sec: 600,
+    txt: "Sors marcher 10 minutes, à ton rythme, avec ta playlist si tu veux. Regarde autour de toi : 3 choses jolies, 2 sons, 1 odeur. Lance le minuteur, il t'attendra même si ton téléphone se verrouille." },
+  stretch: { ic: "🧘", t: "S'étirer en douceur", d: "3 min", when: "Tensions, honte, avant de dormir", why: "S'étirer lentement relâche les muscles que le stress contracte sans qu'on s'en rende compte : le cou, les épaules, le dos. On le fait assise, tranquillement.", k: "guide", steps: [
+    ["Assieds-toi, le dos droit, les pieds posés au sol.", 5],
+    ["Penche doucement ta tête vers l'épaule droite. Sans forcer. Respire.", 15],
+    ["Reviens au centre, puis penche-la vers l'épaule gauche.", 15],
+    ["Fais de grands cercles avec tes épaules, vers l'arrière, lentement.", 15],
+    ["Croise tes doigts et pousse tes mains vers le plafond. Grandis-toi.", 15],
+    ["Relâche les bras.", 4],
+    ["Pose ta main droite sur ton genou gauche et tourne doucement le buste vers la gauche.", 15],
+    ["Reviens au centre, et fais pareil de l'autre côté.", 15],
+    ["Laisse ton dos s'enrouler vers l'avant, la tête lourde, les bras qui pendent.", 15],
+    ["Remonte tout doucement, comme si tu empilais tes vertèbres une par une.", 10],
+    ["Prends une grande inspiration, et souffle.", 6]] },
+};
+function moveEx(b, id) {
+  const m = MOVES[id];
+  b.innerHTML = `<h3>${m.ic} ${m.t} · ${m.d}</h3><p class="small mute">${m.why}</p><div id="mvx"></div>`;
+  const x = $("#mvx"); if (m.k === "guide") guide(x, m.steps); else timerEx(x, m.sec, m.txt);
+  const st = x.querySelector("button.btn"); // en lançant l'exercice, on coche « j'ai bougé » dans Ma journée
+  if (st) st.addEventListener("click", () => { const d = S.day[today()] = S.day[today()] || {}; d.move = "oui"; save(); });
+}
+function movesList() {
+  return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('tools')">‹ Mes outils</button><h1>Bouger pour aller mieux 🏃‍♀️</h1>
+  <p class="mute">Le corps et les émotions sont reliés : bouger fait vraiment redescendre une émotion. Choisis selon ce que tu ressens.</p>
+  ${Object.entries(MOVES).map(([id, m]) => `<div class="step" onclick="go('move','${id}')"><div class="n">${m.ic}</div><div class="grow"><b>${m.t}</b> <span class="small mute">· ${m.d}</span><br><span class="small mute">${m.when}</span></div><span class="mute">›</span></div>`).join("")}
+  <p class="small mute">Rien ici ne demande de sauter. Bouger doit faire du bien : jamais pour te punir ou jusqu'à avoir mal.</p>`;
+}
+function moveView() { return `<button class="btn alt" style="width:auto;margin:0 0 6px;padding:8px 12px" onclick="go('moves')">‹ Bouger</button><div class="card" id="mvbox"></div>`; }
 const ACTS = {
   sigh: ["⚡ Le soupir qui détend (1 min)", b => breath(b, [3, 0, 7, 0], 1, ["Inspire 2 fois par le nez", "", "Souffle longtemps par la bouche", ""])],
   square: ["⬜ Respiration carrée (2 min)", b => breath(b, [4, 4, 4, 4], 2)],
   coh: ["🌬️ Respirer doucement (3 min)", b => breath(b, [5, 0, 5, 0], 3)],
   ground: ["👀 5-4-3-2-1 : revenir ici", b => ground(b, {})],
-  move: ["🏃 Bouger fort, 1 min", b => timerEx(b, 60, "Saute, cours sur place, fais des montées de genoux à fond. Laisse sortir l'énergie.")],
+  move: ["🏃 Bouger fort, 1 min", b => timerEx(b, 60, "Boxe dans un coussin ou pousse un mur de toutes tes forces. Laisse sortir l'énergie.")],
+  push: ["🧱 Pousser le mur (1 min)", b => moveEx(b, "push")], punch: ["🥊 Boxer dans un coussin (1 min)", b => moveEx(b, "punch")],
+  shake: ["🫨 Secouer tout mon corps (1 min)", b => moveEx(b, "shake")], dance: ["💃 Danser sur une chanson (3 min)", b => moveEx(b, "dance")],
+  walk: ["🚶‍♀️ Marcher 10 minutes", b => moveEx(b, "walk")], stretch: ["🧘 M'étirer en douceur (3 min)", b => moveEx(b, "stretch")],
   cold: ["🧊 Le froid, 30 s", b => timerEx(b, 30, "Eau très froide sur le visage, ou un glaçon dans la main. Respire lentement.")],
   wait: ["⏳ Attendre 10 min", b => timerEx(b, 600, "Fais autre chose pendant 10 minutes : musique, marche, douche. L'envie va baisser.")],
   call: ["📞 Parler à quelqu'un", b => { b.innerHTML = (S.trustTel ? `<a class="tel" href="tel:${esc(S.trustTel)}"><div><b>📞 ${esc(S.trustName || "Ma personne de confiance")}</b><br><span>Appeler maintenant</span></div><span>›</span></a>` : "") + `<a class="tel" href="tel:0800235236"><div><b>💬 Fil Santé Jeunes · 0 800 235 236</b><br><span>Gratuit, anonyme</span></div><span>›</span></a>`; }],
@@ -444,10 +515,11 @@ function nowView() {
     <label>Force : <b id="nnv">5</b> / 10</label><input type="range" min="0" max="10" value="5" id="nn" oninput="$('#nnv').textContent=this.value">
     <label>Ce qui se passe (si tu veux)</label><textarea id="nsit" placeholder="Tu peux laisser vide"></textarea>
     <button class="btn warm" onclick="nowGo()">Aide-moi</button></div>`;
-  const h = HELP[NOW.fam];
-  return `<h1>${NOW.n >= 8 ? "Je suis là 🫧" : "D'accord, je t'entends 🫧"}</h1>
-    ${NOW.n >= 8 ? `<div class="card" style="border-color:var(--sos)"><b>C'est très fort en ce moment (${NOW.n}/10).</b> Ça va redescendre. Commence par le bouton SOS, il est fait pour ça.<button class="btn sos" onclick="openSOS()">🆘 Ouvrir le SOS</button></div>` : ""}
-    <div class="card"><p>${h.msg}</p><p class="small mute">Choisis ce que tu veux essayer :</p>${h.acts.map((a, i) => `<button class="btn ${i ? "alt" : ""}" onclick="nowAct('${a}')">${ACTS[a][0]}</button>`).join("")}</div>
+  const h = HELP[NOW.fam], hi = NOW.n >= 8 && NOW.fam !== "bien", acts = nowActs();
+  const others = (NOW.fams || []).filter(f => f !== NOW.fam && f !== "bien").map(f => HELP[f].nm);
+  return `<h1>${hi ? "Je suis là 🫧" : "D'accord, je t'entends 🫧"}</h1>
+    ${hi ? `<div class="card" style="border-color:var(--sos)"><b>C'est très fort en ce moment (${NOW.n}/10).</b> Ça va redescendre. Quand c'est aussi fort, <b>commence par le corps</b> : le froid ou un gros effort font redescendre plus vite que la respiration. Et le bouton SOS est là pour toi.<button class="btn sos" onclick="openSOS()">🆘 Ouvrir le SOS</button></div>` : ""}
+    <div class="card"><p>${h.msg}</p>${others.length ? `<p class="small mute">Tu ressens aussi ${others.join(" et ")} : j'ai ajouté ce qui aide pour ça.</p>` : ""}<p class="small mute">Choisis ce que tu veux essayer :</p>${acts.map((a, i) => `<button class="btn ${i ? "alt" : ""}" onclick="nowAct('${a}')">${ACTS[a][0]}</button>`).join("")}</div>
     <div class="card hidden" id="nact"></div>
     <div class="card"><h3>Et maintenant, sur 10 ?</h3><input type="range" min="0" max="10" value="${NOW.n}" id="n2" oninput="$('#n2v').textContent=this.value"><div class="big" style="font-size:28px"><span id="n2v">${NOW.n}</span> / 10</div>
     <button class="btn soft" onclick="nowEnd()">C'est noté</button></div>`;
@@ -457,7 +529,7 @@ function nowGo() {
   const emos = [...document.querySelectorAll("#nemo .chip.on")].map(c => c.textContent), n = +$("#nn").value;
   const fams = emos.map(e => FAM[e] || "bien"), order = ["stress", "colere", "vide", "honte", "triste", "bien"];
   const fam = emos.length ? order.find(f => fams.includes(f)) : (n >= 5 ? "stress" : "bien");
-  NOW = { emos, n, fam, sit: $("#nsit").value }; vib(20); render(); window.scrollTo(0, 0);
+  NOW = { emos, n, fam, fams: order.filter(f => fams.includes(f)), sit: $("#nsit").value }; vib(20); render(); window.scrollTo(0, 0);
 }
 function nowAct(a) { NOW.act = a; const b = $("#nact"); stopTimers(); b.classList.remove("hidden"); b.innerHTML = ""; ACTS[a][1](b); b.scrollIntoView({ behavior: "smooth", block: "start" }); }
 function nowEnd() {
@@ -536,7 +608,8 @@ function dayCard() {
   return `<div class="card"><h3>😴 Ma journée</h3><p class="small mute">Le sommeil, les repas et le sport changent beaucoup la force des émotions.</p>
     <label>Cette nuit, j'ai dormi : <b>${d.sleep ? d.sleep + " h" : "?"}</b></label><input type="range" min="3" max="12" step="0.5" value="${d.sleep || 7.5}" onchange="setDay('sleep',+this.value)">
     <div class="chips">${opt("eat", "oui", "🍽️ J'ai bien mangé")}${opt("eat", "peu", "🥄 Un peu")}</div>
-    <div class="chips">${opt("move", "oui", "🏃 J'ai bougé")}${opt("screen", "tard", "📱 Écrans tard hier")}</div></div>`;
+    <div class="chips">${opt("move", "oui", "🏃 J'ai bougé")}${opt("screen", "tard", "📱 Écrans tard hier")}</div>
+    ${d.move !== "oui" && S.mood[today()] && S.mood[today()].v <= 2 ? `<p class="small">Tu n'as pas encore bougé aujourd'hui, et ta météo est un peu grise. 10 minutes de marche suffisent souvent à l'éclaircir.</p><button class="btn soft" onclick="go('move','walk')">🚶‍♀️ Marcher 10 minutes</button>` : ""}</div>`;
 }
 function setDay(k, v) { const d = S.day[today()] = S.day[today()] || {}; d[k] = d[k] === v ? undefined : v; save(); render(); }
 
@@ -565,7 +638,7 @@ const TOOLS = [
   { ic: "🌊", t: "Envie de me faire du mal", go: () => goUrge() },
   { ic: "🎧", t: "Séances audio guidées", go: () => go("sessions") }, { ic: "🌙", t: "S'endormir", go: () => openSess("sommeil") },
   { ic: "⚡", t: "Stress express", go: () => go("stress") }, { ic: "🌬️", t: "Respirer 3 min", go: () => go("breathe") },
-  { ic: "🏆", t: "Mes victoires", go: () => go("step", 18) }, { ic: "👀", t: "5-4-3-2-1", go: () => go("step", 12) }, { ic: "🧊", t: "Le froid", go: () => go("step", 10) }, { ic: "🏃", t: "Bouger fort", go: () => go("step", 11) },
+  { ic: "🏆", t: "Mes victoires", go: () => go("step", 18) }, { ic: "👀", t: "5-4-3-2-1", go: () => go("step", 12) }, { ic: "🧊", t: "Le froid", go: () => go("step", 10) }, { ic: "🏃‍♀️", t: "Bouger pour aller mieux", go: () => go("moves") },
   { ic: "🎭", t: "Mon personnage", id: "hero" }, { ic: "✋", t: "STOP", id: "stop" }, { ic: "🔄", t: "L'action opposée", id: "opp" }, { ic: "🔍", t: "Vérifier les faits", id: "facts" },
   { ic: "🏝️", t: "Mon endroit calme", go: () => go("step", 8) }, { ic: "🧶", t: "Démêler une pensée", go: () => go("step", 15) }, { ic: "💜", t: "Voix de la meilleure amie", go: () => go("step", 16) },
 ];
@@ -797,7 +870,7 @@ function openSOS() {
     ${SEANCES.envie ? `<button class="btn soft" onclick="closeSOS();openSess('envie',()=>{go('home');openSOS()})">🎧 Ou une voix pour m'accompagner (${Math.round(SEANCES.envie.d / 60)} min)</button>` : ""}</div>
   <div class="card"><h3>2. Fais redescendre vite</h3>
     <button class="btn" onclick="sosT('🧊 Eau très froide sur le visage, ou un glaçon dans la main. Respire lentement.',30)">🧊 Le froid, 30 s</button>
-    <button class="btn soft" onclick="sosT('🏃 Saute, cours sur place, à fond. Laisse sortir l\\'énergie.',60)">🏃 Bouger fort, 1 min</button>
+    <button class="btn soft" onclick="sosT('🏃 Pousse un mur ou boxe dans un coussin, de toutes tes forces. Laisse sortir l\\'énergie.',60)">🏃 Bouger fort, 1 min</button>
     <button class="btn alt" onclick="sosT('⏳ Attends 10 minutes en faisant autre chose. L\\'envie va baisser.',600)">⏳ Attendre 10 min</button>
     <div class="big" id="sost" style="font-size:30px"></div><p class="small" id="sostx"></p></div>
   <div class="card"><h3>3. Ce qui m'aide</h3>${S.music ? `<a class="tel" href="${esc(S.music)}" target="_blank" rel="noopener"><div><b>🎵 Ma playlist qui m'apaise</b><br><span>L'écouter maintenant</span></div><span>›</span></a>` : ""}<div class="chips">${box.map(b => `<span class="chip">${esc(b)}</span>`).join("")}</div>
